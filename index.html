@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Consolidador de Informes</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f0f4f8;color:#1a202c;min-height:100vh}
+header{background:#1a3a5c;color:#fff;padding:16px 24px;display:flex;align-items:center;gap:16px}
+.logo{font-size:18px;font-weight:600}.sub{font-size:11px;color:#a0c4e8;margin-top:2px}
+.badge{background:#2d6a9f;color:#fff;font-size:11px;padding:3px 10px;border-radius:20px;white-space:nowrap;margin-left:auto}
+.container{max-width:900px;margin:24px auto;padding:0 16px 60px}
+.card{background:#fff;border-radius:12px;border:0.5px solid #d1d9e0;padding:24px;margin-bottom:20px}
+.card-title{font-size:13px;font-weight:600;color:#2d6a9f;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #e8edf2}
+label{display:block;font-size:12px;color:#4a5568;margin-bottom:4px;font-weight:500}
+input,select,textarea{width:100%;background:#f7fafc;border:0.5px solid #cbd5e0;border-radius:8px;padding:9px 12px;font-size:13px;color:#1a202c;font-family:inherit;outline:none;transition:border .15s}
+input:focus,select:focus,textarea:focus{border-color:#2d6a9f;background:#fff}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.fz{border:1.5px dashed #cbd5e0;border-radius:10px;padding:28px;text-align:center;cursor:pointer;background:#f7fafc;transition:all .2s}
+.fz:hover{border-color:#2d6a9f;background:#eef4fb}
+.fz.drag{border-color:#2d6a9f;background:#eef4fb}
+.fz-ico{font-size:28px;margin-bottom:8px}
+.fz p{font-size:13px;color:#718096}
+.fz small{font-size:11px;color:#a0aec0}
+.pill{display:inline-flex;align-items:center;gap:6px;background:#eef4fb;border:.5px solid #bee3f8;border-radius:20px;padding:4px 10px;font-size:12px;color:#2d6a9f;margin:4px}
+.pill button{background:none;border:none;cursor:pointer;color:#e53e3e;font-size:13px;line-height:1;padding:0 0 0 4px}
+.files-wrap{margin-top:12px;display:flex;flex-wrap:wrap}
+.btn-main{background:#e07b39;color:#fff;border:none;border-radius:8px;padding:13px 36px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s}
+.btn-main:hover{background:#c9682a}
+.btn-main:disabled{background:#a0aec0;cursor:not-allowed}
+.btn-sec{background:#f7fafc;color:#2d6a9f;border:.5px solid #2d6a9f;border-radius:8px;padding:11px 24px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-sec:hover{background:#eef4fb}
+.abar{background:#1a3a5c;border-radius:12px;padding:20px 24px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.step{display:flex;align-items:center;gap:10px;font-size:12px;color:#718096}
+.step-n{width:24px;height:24px;border-radius:50%;background:#e8edf2;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;color:#4a5568;flex-shrink:0}
+.step-n.done{background:#2d9e6b;color:#fff}
+.step-n.active{background:#2d6a9f;color:#fff}
+.steps{display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-bottom:24px}
+.step-sep{width:32px;height:1px;background:#e8edf2}
+.prog{background:#e8edf2;border-radius:8px;height:6px;overflow:hidden;margin:10px 0}
+.prog-bar{height:100%;background:#2d6a9f;border-radius:8px;transition:width .4s}
+.log{background:#f7fafc;border:.5px solid #e8edf2;border-radius:8px;padding:12px;font-size:12px;color:#4a5568;max-height:160px;overflow-y:auto;line-height:1.8;font-family:monospace}
+.log-line{display:block}
+.log-line.ok{color:#2d9e6b}
+.log-line.er{color:#e53e3e}
+.log-line.ai{color:#2d6a9f}
+.sec-inf{margin-bottom:20px}
+.sec-inf h3{font-size:12px;font-weight:600;color:#2d6a9f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #e8edf2}
+.sec-inf p,.sec-inf li{font-size:13px;color:#2d3748;line-height:1.7;margin-bottom:4px}
+.sec-inf ul{padding-left:18px}
+.tag{display:inline-block;background:#eef4fb;border:.5px solid #bee3f8;border-radius:4px;padding:2px 8px;font-size:11px;color:#2d6a9f;margin:2px}
+.tag.v{background:#c6f6d5;border-color:#9ae6b4;color:#276749}
+.tag.r{background:#fed7d7;border-color:#fc8181;color:#822727}
+.tag.a{background:#fefcbf;border-color:#f6e05e;color:#744210}
+.inf-header{background:#1a3a5c;color:#fff;border-radius:8px;padding:16px 20px;margin-bottom:16px}
+.inf-header h2{font-size:15px;font-weight:600}
+.inf-header p{font-size:11px;color:#a0c4e8;margin-top:3px}
+.inf-cod{background:#e07b39;color:#fff;font-size:13px;font-weight:700;padding:5px 14px;border-radius:6px;font-family:monospace;display:inline-block;margin-top:8px}
+.tst{position:fixed;bottom:24px;right:24px;background:#2d9e6b;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
+.tst.on{opacity:1}.tst.er{background:#e53e3e}
+.api-banner{background:#fff8f0;border:1px solid #f6ad55;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:12px;color:#744210;line-height:1.6}
+.api-banner input{margin-top:8px;font-family:monospace;font-size:12px}
+#panel-result{display:none}
+#panel-form{display:block}
+@media(max-width:600px){.g2,.g3{grid-template-columns:1fr}.steps{gap:12px}.step-sep{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="logo">Sustenting Chile SpA</div><div class="sub">Forestación Barahona · MVC-SGS-CSER-001-2026</div></div>
+  <div class="badge">Consolidador de Informes</div>
+</header>
+
+<div class="container">
+
+  <div id="panel-form">
+
+    <div class="api-banner">
+      <strong>⚙️ Configuración requerida:</strong> Para que la IA analice los reportes, ingresa tu API Key de Anthropic.
+      Puedes obtenerla en <a href="https://console.anthropic.com" target="_blank" style="color:#2d6a9f">console.anthropic.com</a>.
+      La clave se guarda solo en tu navegador y nunca se envía a ningún servidor externo.
+      <input type="password" id="apikey" placeholder="sk-ant-..." autocomplete="off"/>
+    </div>
+
+    <div class="steps">
+      <div class="step"><div class="step-n active" id="sn1">1</div><span>Configurar período</span></div>
+      <div class="step-sep"></div>
+      <div class="step"><div class="step-n" id="sn2">2</div><span>Cargar reportes</span></div>
+      <div class="step-sep"></div>
+      <div class="step"><div class="step-n" id="sn3">3</div><span>Generar informe</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Configuración del Período</div>
+      <div class="g3">
+        <div>
+          <label>Tipo de informe</label>
+          <select id="tipo" onchange="updTipo()">
+            <option value="semanal">Semanal</option>
+            <option value="mensual" selected>Mensual</option>
+            <option value="trimestral">Trimestral</option>
+            <option value="semestral">Semestral</option>
+            <option value="anual">Anual</option>
+            <option value="personalizado">Personalizado</option>
+          </select>
+        </div>
+        <div><label>Fecha inicio</label><input type="date" id="fini"/></div>
+        <div><label>Fecha término</label><input type="date" id="ffin"/></div>
+      </div>
+      <div style="margin-top:12px">
+        <label>Descripción del período</label>
+        <input type="text" id="desc-per" placeholder="Ej: Informe Mensual Marzo 2026"/>
+      </div>
+      <div style="margin-top:12px">
+        <label>Elaborado por</label>
+        <input type="text" id="elab" placeholder="Nombre del profesional responsable"/>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Carga de Reportes Diarios (PDF)</div>
+      <div class="fz" id="dropzone"
+        ondragover="event.preventDefault();this.classList.add('drag')"
+        ondragleave="this.classList.remove('drag')"
+        ondrop="onDrop(event)"
+        onclick="document.getElementById('finput').click()">
+        <div class="fz-ico">📄</div>
+        <p>Arrastra los PDFs aquí o haz clic para seleccionar</p>
+        <small>Reportes diarios generados con el formulario del supervisor · Máx. 30 archivos</small>
+      </div>
+      <input type="file" id="finput" accept=".pdf,application/pdf" multiple style="display:none" onchange="onFiles(event)"/>
+      <div class="files-wrap" id="flist"></div>
+      <div id="fcount" style="font-size:12px;color:#718096;margin-top:8px"></div>
+    </div>
+
+    <div class="card" id="card-proceso" style="display:none">
+      <div class="card-title">Procesando Informe</div>
+      <div class="prog"><div class="prog-bar" id="pbar" style="width:0%"></div></div>
+      <p id="pstat" style="font-size:12px;color:#4a5568;margin:8px 0 12px">Iniciando...</p>
+      <div class="log" id="log"></div>
+    </div>
+
+    <div class="abar">
+      <button class="btn-main" id="btn-gen" onclick="generar()">Analizar y Generar Informe</button>
+    </div>
+  </div>
+
+  <div id="panel-result">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:15px;font-weight:600;color:#1a3a5c">Informe Consolidado Generado</div>
+        <div style="font-size:12px;color:#718096;margin-top:2px" id="res-sub"></div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-sec" onclick="volverForm()">← Nuevo informe</button>
+        <button class="btn-main" id="btn-pdf" onclick="descargarPDF()">Descargar PDF</button>
+      </div>
+    </div>
+    <div id="result-content"></div>
+  </div>
+
+</div>
+<div class="tst" id="tst"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+let archivos=[], datosInforme=null;
+
+function tst(msg,err){
+  const t=document.getElementById('tst');
+  t.textContent=msg;t.className='tst on'+(err?' er':'');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),3500);
+}
+
+function getKey(){
+  const k=document.getElementById('apikey').value.trim();
+  if(k) try{localStorage.setItem('_ak',k);}catch(e){}
+  return k||localStorage.getItem('_ak')||'';
+}
+
+function updTipo(){
+  const t=document.getElementById('tipo').value;
+  const hoy=new Date();
+  let fi,ff;
+  if(t==='semanal'){const dow=hoy.getDay()||7;fi=new Date(hoy);fi.setDate(hoy.getDate()-dow+1);ff=new Date(fi);ff.setDate(fi.getDate()+6);}
+  else if(t==='mensual'){fi=new Date(hoy.getFullYear(),hoy.getMonth(),1);ff=new Date(hoy.getFullYear(),hoy.getMonth()+1,0);}
+  else if(t==='trimestral'){const q=Math.floor(hoy.getMonth()/3);fi=new Date(hoy.getFullYear(),q*3,1);ff=new Date(hoy.getFullYear(),q*3+3,0);}
+  else if(t==='semestral'){const s=hoy.getMonth()<6?0:6;fi=new Date(hoy.getFullYear(),s,1);ff=new Date(hoy.getFullYear(),s+6,0);}
+  else if(t==='anual'){fi=new Date(hoy.getFullYear(),0,1);ff=new Date(hoy.getFullYear(),11,31);}
+  else return;
+  document.getElementById('fini').value=fi.toISOString().split('T')[0];
+  document.getElementById('ffin').value=ff.toISOString().split('T')[0];
+  autoDesc();
+}
+
+function autoDesc(){
+  const t=document.getElementById('tipo').value;
+  const fi=document.getElementById('fini').value;
+  const ff=document.getElementById('ffin').value;
+  if(!fi||!ff)return;
+  const d1=new Date(fi+'T12:00:00');
+  let desc='';
+  if(t==='mensual')desc=`Informe Mensual ${MESES[d1.getMonth()]} ${d1.getFullYear()}`;
+  else if(t==='anual')desc=`Informe Anual ${d1.getFullYear()}`;
+  else if(t==='trimestral')desc=`Informe Trimestral Q${Math.floor(d1.getMonth()/3)+1} ${d1.getFullYear()}`;
+  else if(t==='semestral')desc=`Informe Semestral ${d1.getMonth()<6?'1er':'2do'} Semestre ${d1.getFullYear()}`;
+  else if(t==='semanal')desc=`Informe Semanal ${fi} al ${ff}`;
+  else desc=`Informe ${fi} al ${ff}`;
+  document.getElementById('desc-per').value=desc;
+}
+
+function onDrop(e){
+  e.preventDefault();
+  document.getElementById('dropzone').classList.remove('drag');
+  addFiles([...e.dataTransfer.files].filter(f=>f.type==='application/pdf'||f.name.endsWith('.pdf')));
+}
+function onFiles(e){addFiles([...e.target.files]);e.target.value='';}
+function addFiles(files){
+  const nuevos=files.filter(f=>!archivos.find(a=>a.name===f.name&&a.size===f.size));
+  if(archivos.length+nuevos.length>30){tst('Máximo 30 archivos',true);return;}
+  archivos.push(...nuevos);
+  rendFiles();
+}
+function rmFile(i){archivos.splice(i,1);rendFiles();}
+function rendFiles(){
+  const c=document.getElementById('flist');c.innerHTML='';
+  archivos.forEach((f,i)=>{
+    const p=document.createElement('div');p.className='pill';
+    p.innerHTML=`📄 ${f.name} <button onclick="rmFile(${i})">×</button>`;
+    c.appendChild(p);
+  });
+  document.getElementById('fcount').textContent=archivos.length?`${archivos.length} archivo(s) cargado(s)`:'';
+  document.getElementById('sn2').className='step-n'+(archivos.length>0?' done':'');
+}
+
+function toB64(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>res(e.target.result.split(',')[1]);
+    r.onerror=rej;
+    r.readAsDataURL(file);
+  });
+}
+
+function log(msg,cls=''){
+  const c=document.getElementById('log');
+  const s=document.createElement('span');s.className='log-line '+cls;
+  s.textContent='› '+msg;c.appendChild(s);c.appendChild(document.createElement('br'));
+  c.scrollTop=c.scrollHeight;
+}
+function prog(p,msg){document.getElementById('pbar').style.width=p+'%';document.getElementById('pstat').textContent=msg;}
+
+async function generar(){
+  if(!archivos.length){tst('Carga al menos un reporte PDF',true);return;}
+  const apiKey=getKey();
+  if(!apiKey){tst('Ingresa tu API Key de Anthropic',true);document.getElementById('apikey').focus();return;}
+  const fi=document.getElementById('fini').value;
+  const ff=document.getElementById('ffin').value;
+  const desc=document.getElementById('desc-per').value||'Informe consolidado';
+  const elab=document.getElementById('elab').value||'Supervisor';
+  if(!fi||!ff){tst('Ingresa las fechas del período',true);return;}
+
+  document.getElementById('card-proceso').style.display='block';
+  document.getElementById('btn-gen').disabled=true;
+  document.getElementById('sn3').className='step-n active';
+
+  log('Iniciando análisis con IA...');
+  prog(5,'Preparando archivos...');
+
+  const pdfs=[];
+  for(let i=0;i<archivos.length;i++){
+    log(`Procesando: ${archivos[i].name}`);
+    prog(5+((i+1)/archivos.length)*20,`Leyendo archivo ${i+1} de ${archivos.length}...`);
+    const b64=await toB64(archivos[i]);
+    pdfs.push({nombre:archivos[i].name,b64});
+  }
+
+  log('Enviando a IA para análisis...','ai');
+  prog(30,'Analizando contenido con Claude...');
+
+  const userContent=[];
+  pdfs.forEach(p=>{
+    userContent.push({
+      type:'document',
+      source:{type:'base64',media_type:'application/pdf',data:p.b64},
+      title:p.nombre
+    });
+  });
+
+  userContent.push({
+    type:'text',
+    text:`Eres un experto en análisis de informes forestales para Sustenting Chile SpA, proyecto Forestación Barahona, contrato MVC-SGS-CSER-001-2026.
+
+Analiza TODOS los reportes diarios del supervisor adjuntos y genera un informe consolidado en JSON con la siguiente estructura exacta:
+
+{
+  "resumen_ejecutivo": "texto completo del resumen ejecutivo (mínimo 5 párrafos detallados)",
+  "periodo": {
+    "inicio": "${fi}",
+    "fin": "${ff}",
+    "descripcion": "${desc}",
+    "dias_con_reporte": 0,
+    "supervisores": []
+  },
+  "dotacion": {
+    "total_personas": 0,
+    "dias_trabajados_acumulados": 0,
+    "ausencias": 0,
+    "personal": []
+  },
+  "actividades": [
+    {"categoria": "", "actividades": [], "total": 0, "detalle": ""}
+  ],
+  "seguridad": {
+    "estado_general": "",
+    "dias_sin_novedad": 0,
+    "dias_observaciones": 0,
+    "dias_incidente": 0,
+    "documentos_frecuentes": [],
+    "epp_frecuente": [],
+    "incidentes": [],
+    "observaciones_relevantes": []
+  },
+  "materiales": [
+    {"material": "", "cantidad_total": 0, "unidad": ""}
+  ],
+  "visitas": {
+    "total": 0,
+    "detalle": []
+  },
+  "clima": {
+    "condiciones": [],
+    "temperatura_promedio": "",
+    "uv_frecuente": ""
+  },
+  "observaciones_generales": [],
+  "comunicaciones_mvc": [],
+  "semanas": [
+    {
+      "numero": 1,
+      "rango": "",
+      "fotos_seleccionadas": [
+        {"descripcion": "descripción representativa de foto 1 seleccionada", "criterio_seleccion": "por qué fue elegida", "fecha_origen": ""},
+        {"descripcion": "descripción representativa de foto 2 seleccionada", "criterio_seleccion": "por qué fue elegida", "fecha_origen": ""}
+      ],
+      "resumen_semana": ""
+    }
+  ],
+  "planificacion_proxima": [],
+  "indicadores": {
+    "avance_estimado": "",
+    "eficiencia_operacional": "",
+    "cumplimiento_seguridad": "",
+    "comentario_indicadores": ""
+  }
+}
+
+INSTRUCCIONES IMPORTANTES:
+- Extrae y consolida TODA la información de TODOS los reportes
+- En "semanas", agrupa los reportes por semana y selecciona 2 fotos representativas por semana describiendo cuáles elegirías basado en el contenido más relevante
+- El resumen ejecutivo debe ser profesional, detallado y cubrir todos los aspectos del período
+- Responde SOLO con el JSON, sin texto adicional, sin markdown, sin backticks`
+  });
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:4000,
+        system:'Eres un experto en informes técnicos forestales. Respondes SIEMPRE con JSON válido y bien estructurado, sin texto adicional.',
+        messages:[{role:'user',content:userContent}]
+      })
+    });
+
+    if(!resp.ok){
+      const err=await resp.json().catch(()=>({}));
+      throw new Error(err.error?.message||`HTTP ${resp.status}`);
+    }
+
+    prog(80,'Procesando respuesta...');
+    log('Respuesta recibida. Procesando...','ai');
+
+    const data=await resp.json();
+    let raw=data.content.map(b=>b.text||'').join('').trim();
+    raw=raw.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+
+    const inf=JSON.parse(raw);
+    datosInforme={...inf,desc,fi,ff,elab,tipo:document.getElementById('tipo').value};
+
+    prog(100,'¡Informe generado!');
+    log('Informe consolidado completado ✓','ok');
+    document.getElementById('sn3').className='step-n done';
+
+    setTimeout(()=>mostrarResultado(datosInforme),600);
+
+  }catch(err){
+    log('Error: '+err.message,'er');
+    prog(0,'Error al procesar');
+    tst('Error: '+err.message,true);
+    document.getElementById('btn-gen').disabled=false;
+    document.getElementById('sn3').className='step-n';
+  }
+}
+
+function mostrarResultado(d){
+  document.getElementById('panel-form').style.display='none';
+  document.getElementById('panel-result').style.display='block';
+  document.getElementById('res-sub').textContent=`${d.desc} · ${d.fi} al ${d.ff} · Elaborado por: ${d.elab}`;
+
+  const cod=genCod();
+  d.cod=cod;
+
+  const c=document.getElementById('result-content');
+  c.innerHTML='';
+
+  const add=(html)=>{const div=document.createElement('div');div.innerHTML=html;c.appendChild(div);};
+  const s=(title,html)=>`<div class="card sec-inf"><h3>${title}</h3>${html}</div>`;
+
+  add(`<div class="inf-header">
+    <h2>${d.desc}</h2>
+    <p>Sustenting Chile SpA · Forestación Barahona · Contrato MVC-SGS-CSER-001-2026</p>
+    <p style="margin-top:4px">Período: ${d.fi} al ${d.ff} · Elaborado por: ${d.elab}</p>
+    <div class="inf-cod">${cod}</div>
+  </div>`);
+
+  add(s('Resumen Ejecutivo',`<p>${(d.resumen_ejecutivo||'Sin resumen generado.').replace(/\n/g,'</p><p>')}</p>`));
+
+  if(d.periodo||d.indicadores){
+    let h='<div class="g2" style="gap:10px">';
+    if(d.periodo)h+=`<div><b style="font-size:12px">Período</b>
+      <p>Días con reporte: <b>${d.periodo.dias_con_reporte||0}</b></p>
+      <p>Supervisores: ${(d.periodo.supervisores||[]).join(', ')||'—'}</p></div>`;
+    if(d.indicadores)h+=`<div><b style="font-size:12px">Indicadores</b>
+      <p>Avance estimado: <span class="tag v">${d.indicadores.avance_estimado||'—'}</span></p>
+      <p>Seguridad: <span class="tag v">${d.indicadores.cumplimiento_seguridad||'—'}</span></p>
+      <p>Eficiencia: <span class="tag">${d.indicadores.eficiencia_operacional||'—'}</span></p>
+      ${d.indicadores.comentario_indicadores?`<p style="margin-top:6px">${d.indicadores.comentario_indicadores}</p>`:''}</div>`;
+    h+='</div>';
+    add(s('Indicadores del Período',h));
+  }
+
+  if(d.dotacion){
+    const dt=d.dotacion;
+    add(s('Dotación de Personal',`
+      <div class="g3" style="gap:8px;margin-bottom:10px">
+        <div style="background:#f7fafc;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:600;color:#2d6a9f">${dt.total_personas||0}</div><div style="font-size:11px;color:#718096">Total personas</div></div>
+        <div style="background:#f7fafc;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:600;color:#2d9e6b">${dt.dias_trabajados_acumulados||0}</div><div style="font-size:11px;color:#718096">Días-hombre</div></div>
+        <div style="background:#f7fafc;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:600;color:#e07b39">${dt.ausencias||0}</div><div style="font-size:11px;color:#718096">Ausencias</div></div>
+      </div>
+      ${(dt.personal||[]).length?'<ul>'+dt.personal.map(p=>`<li>${p}</li>`).join('')+'</ul>':''}`
+    ));
+  }
+
+  if((d.actividades||[]).length){
+    let h='';
+    d.actividades.forEach(a=>{
+      h+=`<div style="margin-bottom:12px"><b style="font-size:12px">${a.categoria}</b> <span class="tag">${a.total||0} registros</span>`;
+      if(a.detalle)h+=`<p style="margin-top:4px">${a.detalle}</p>`;
+      if((a.actividades||[]).length)h+=`<div style="margin-top:4px">${a.actividades.map(x=>`<span class="tag">${x}</span>`).join('')}</div>`;
+      h+='</div>';
+    });
+    add(s('Actividades por Categoría',h));
+  }
+
+  if(d.seguridad){
+    const sg=d.seguridad;
+    const et=sg.estado_general||'';
+    const ecls=et.toLowerCase().includes('novedad')?'v':et.toLowerCase().includes('incidente')?'r':'a';
+    let h=`<p>Estado general: <span class="tag ${ecls}">${et||'—'}</span></p>
+      <div class="g3" style="gap:8px;margin:10px 0">
+        <div style="background:#c6f6d5;border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:600;color:#276749">${sg.dias_sin_novedad||0}</div><div style="font-size:11px;color:#276749">Sin novedad</div></div>
+        <div style="background:#fefcbf;border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:600;color:#744210">${sg.dias_observaciones||0}</div><div style="font-size:11px;color:#744210">Observaciones</div></div>
+        <div style="background:#fed7d7;border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:600;color:#822727">${sg.dias_incidente||0}</div><div style="font-size:11px;color:#822727">Incidentes</div></div>
+      </div>`;
+    if((sg.documentos_frecuentes||[]).length)h+=`<p style="margin-bottom:4px"><b style="font-size:12px">Documentos más frecuentes:</b></p><div>${sg.documentos_frecuentes.map(x=>`<span class="tag">${x}</span>`).join('')}</div>`;
+    if((sg.epp_frecuente||[]).length)h+=`<p style="margin:8px 0 4px"><b style="font-size:12px">EPP utilizado:</b></p><div>${sg.epp_frecuente.map(x=>`<span class="tag">${x}</span>`).join('')}</div>`;
+    if((sg.incidentes||[]).length)h+=`<p style="margin:8px 0 4px"><b style="font-size:12px">Incidentes registrados:</b></p><ul>${sg.incidentes.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+    if((sg.observaciones_relevantes||[]).length)h+=`<p style="margin:8px 0 4px"><b style="font-size:12px">Observaciones relevantes:</b></p><ul>${sg.observaciones_relevantes.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+    add(s('Variables de Seguridad',h));
+  }
+
+  if((d.materiales||[]).length){
+    let h='<ul>';
+    d.materiales.forEach(m=>{h+=`<li>${m.material}: <b>${m.cantidad_total}</b> ${m.unidad}</li>`;});
+    h+='</ul>';
+    add(s('Materiales e Insumos Totales',h));
+  }
+
+  if(d.visitas&&(d.visitas.total>0||(d.visitas.detalle||[]).length)){
+    let h=`<p>Total de visitas: <b>${d.visitas.total||0}</b></p>`;
+    if((d.visitas.detalle||[]).length)h+=`<ul style="margin-top:6px">${d.visitas.detalle.map(v=>`<li>${v}</li>`).join('')}</ul>`;
+    add(s('Visitas DET / MVC',h));
+  }
+
+  if(d.clima){
+    let h=`<p>Temperatura promedio: <b>${d.clima.temperatura_promedio||'—'}</b> · UV frecuente: <b>${d.clima.uv_frecuente||'—'}</b></p>`;
+    if((d.clima.condiciones||[]).length)h+=`<div style="margin-top:6px">${d.clima.condiciones.map(c=>`<span class="tag">${c}</span>`).join('')}</div>`;
+    add(s('Condiciones Climáticas',h));
+  }
+
+  if((d.semanas||[]).length){
+    let h='';
+    d.semanas.forEach(sem=>{
+      h+=`<div style="margin-bottom:16px;background:#f7fafc;border-radius:8px;padding:12px">
+        <b style="font-size:12px;color:#2d6a9f">Semana ${sem.numero}${sem.rango?' — '+sem.rango:''}</b>
+        ${sem.resumen_semana?`<p style="margin:6px 0">${sem.resumen_semana}</p>`:''}
+        <div class="g2" style="gap:10px;margin-top:10px">`;
+      (sem.fotos_seleccionadas||[]).forEach((f,fi)=>{
+        h+=`<div style="background:#fff;border:.5px solid #d1d9e0;border-radius:8px;padding:10px">
+          <div style="background:#eef4fb;border-radius:6px;height:80px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px">📷</div>
+          <p style="font-size:12px;font-weight:600;color:#2d3748;margin-bottom:3px">Foto representativa ${fi+1}</p>
+          <p style="font-size:11px;color:#4a5568">${f.descripcion||'—'}</p>
+          ${f.criterio_seleccion?`<p style="font-size:10px;color:#718096;margin-top:4px;font-style:italic">Criterio: ${f.criterio_seleccion}</p>`:''}
+          ${f.fecha_origen?`<span class="tag" style="font-size:10px">${f.fecha_origen}</span>`:''}
+        </div>`;
+      });
+      h+='</div></div>';
+    });
+    add(s('Registro Fotográfico por Semana',h));
+  }
+
+  if((d.observaciones_generales||[]).length){
+    add(s('Observaciones Generales',`<ul>${d.observaciones_generales.map(o=>`<li>${o}</li>`).join('')}</ul>`));
+  }
+  if((d.comunicaciones_mvc||[]).length){
+    add(s('Comunicaciones con MVC',`<ul>${d.comunicaciones_mvc.map(o=>`<li>${o}</li>`).join('')}</ul>`));
+  }
+  if((d.planificacion_proxima||[]).length){
+    add(s('Planificación Período Siguiente',`<ul>${d.planificacion_proxima.map(o=>`<li>${o}</li>`).join('')}</ul>`));
+  }
+
+  window.scrollTo({top:0,behavior:'smooth'});
+  tst('Informe generado correctamente ✓');
+}
+
+function volverForm(){
+  document.getElementById('panel-form').style.display='block';
+  document.getElementById('panel-result').style.display='none';
+  document.getElementById('card-proceso').style.display='none';
+  document.getElementById('btn-gen').disabled=false;
+  document.getElementById('pbar').style.width='0%';
+  document.getElementById('log').innerHTML='';
+  document.getElementById('sn1').className='step-n active';
+  document.getElementById('sn2').className='step-n'+(archivos.length?' done':'');
+  document.getElementById('sn3').className='step-n';
+}
+
+function genCod(){
+  const h=new Date();
+  const aa=String(h.getFullYear()).slice(-2);
+  const mm=String(h.getMonth()+1).padStart(2,'0');
+  const tipo=(document.getElementById('tipo')?.value||'INF').slice(0,3).toUpperCase();
+  if(!window._cntInf)window._cntInf=0;
+  window._cntInf++;
+  return`SUST-${tipo}-${aa}${mm}-${String(window._cntInf).padStart(2,'0')}`;
+}
+
+function cl(s){
+  if(!s)return'';
+  return String(s)
+    .replace(/á/g,'\xe1').replace(/é/g,'\xe9').replace(/í/g,'\xed')
+    .replace(/ó/g,'\xf3').replace(/ú/g,'\xfa').replace(/ñ/g,'\xf1')
+    .replace(/Á/g,'\xc1').replace(/É/g,'\xc9').replace(/Í/g,'\xcd')
+    .replace(/Ó/g,'\xd3').replace(/Ú/g,'\xda').replace(/Ñ/g,'\xd1')
+    .replace(/ü/g,'\xfc').replace(/Ü/g,'\xdc')
+    .replace(/[^\x00-\xFF]/g,'');
+}
+
+function descargarPDF(){
+  if(!datosInforme){tst('No hay informe generado',true);return;}
+  const d=datosInforme;
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4',compress:true});
+  const W=210,M=15,CW=W-M*2;let y=15;
+  const np=()=>{doc.addPage();y=15;};
+  const chk=(n=10)=>{if(y>285-n)np();};
+  const sec=(t)=>{chk(14);doc.setFillColor(238,244,251);doc.rect(M,y-4,CW,9,'F');doc.setTextColor(45,106,159);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text(cl(t).toUpperCase(),M+2,y+1);doc.setTextColor(26,32,44);doc.setFont('helvetica','normal');y+=13;};
+  const para=(t,indent=0)=>{if(!t)return;doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(26,32,44);const ln=doc.splitTextToSize(cl(String(t)),CW-indent);ln.forEach(l=>{chk();doc.text(l,M+indent,y);y+=5;});y+=1;};
+  const row=(l,v)=>{chk();doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text(cl(l)+':',M,y);doc.setFont('helvetica','normal');const ln=doc.splitTextToSize(cl(String(v)),CW-34);doc.text(ln,M+34,y);y+=ln.length*5+2;};
+
+  doc.setFillColor(26,58,92);doc.rect(0,0,W,30,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(13);doc.setFont('helvetica','bold');
+  doc.text('SUSTENTING CHILE SpA',M,10);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text(cl(d.desc),M,16);
+  doc.text(`Forestacion Barahona · MVC-SGS-CSER-001-2026 · ${d.fi} al ${d.ff}`,M,22);
+  if(d.cod){
+    doc.setFillColor(224,123,57);doc.roundedRect(W-68,4,58,14,3,3,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.text('CODIGO',W-39,9,{align:'center'});
+    doc.setFontSize(9);doc.setFont('helvetica','bold');
+    doc.text(d.cod,W-39,15,{align:'center'});
+  }
+  y=38;
+
+  if(d.indicadores){
+    sec('Indicadores del Período');
+    row('Avance estimado',d.indicadores.avance_estimado||'—');
+    row('Cumplimiento seguridad',d.indicadores.cumplimiento_seguridad||'—');
+    row('Eficiencia operacional',d.indicadores.eficiencia_operacional||'—');
+    if(d.indicadores.comentario_indicadores)para(d.indicadores.comentario_indicadores);
+    y+=2;
+  }
+
+  sec('Resumen Ejecutivo');
+  para(d.resumen_ejecutivo);
+  y+=4;
+
+  if(d.dotacion){
+    sec('Dotacion de Personal');
+    row('Total personas',d.dotacion.total_personas||0);
+    row('Dias-hombre acumulados',d.dotacion.dias_trabajados_acumulados||0);
+    row('Ausencias',d.dotacion.ausencias||0);
+    if((d.dotacion.personal||[]).length){doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('Personal:',M,y);y+=5;d.dotacion.personal.forEach(p=>{chk();doc.setFont('helvetica','normal');doc.text('- '+cl(p),M+2,y);y+=5;});}
+    y+=2;
+  }
+
+  if((d.actividades||[]).length){
+    sec('Actividades por Categoria');
+    d.actividades.forEach(a=>{
+      chk();doc.setFontSize(8);doc.setFont('helvetica','bold');
+      doc.text(cl(a.categoria)+' ('+(a.total||0)+' registros)',M,y);y+=5;
+      if(a.detalle)para(a.detalle,2);
+      if((a.actividades||[]).length){doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text('  '+a.actividades.map(x=>cl(x)).join(' · '),M,y);y+=5;}
+    });
+    y+=2;
+  }
+
+  if(d.seguridad){
+    const sg=d.seguridad;
+    sec('Variables de Seguridad');
+    row('Estado general',sg.estado_general||'—');
+    row('Dias sin novedad',sg.dias_sin_novedad||0);
+    row('Dias con observaciones',sg.dias_observaciones||0);
+    row('Dias con incidente',sg.dias_incidente||0);
+    if((sg.documentos_frecuentes||[]).length)row('Documentos frecuentes',sg.documentos_frecuentes.join(', '));
+    if((sg.epp_frecuente||[]).length)row('EPP utilizado',sg.epp_frecuente.join(', '));
+    if((sg.incidentes||[]).length){doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Incidentes:',M,y);y+=5;sg.incidentes.forEach(i=>para('- '+i,2));}
+    if((sg.observaciones_relevantes||[]).length){doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Observaciones relevantes:',M,y);y+=5;sg.observaciones_relevantes.forEach(i=>para('- '+i,2));}
+    y+=2;
+  }
+
+  if((d.materiales||[]).length){
+    sec('Materiales e Insumos Totales');
+    d.materiales.forEach(m=>{chk();doc.setFontSize(8);doc.setFont('helvetica','normal');doc.text(`- ${cl(m.material)}: ${m.cantidad_total} ${m.unidad}`,M+2,y);y+=5;});
+    y+=2;
+  }
+
+  if(d.visitas&&d.visitas.total>0){
+    sec('Visitas DET / MVC');
+    row('Total visitas',d.visitas.total);
+    if((d.visitas.detalle||[]).length)d.visitas.detalle.forEach(v=>para('- '+v,2));
+    y+=2;
+  }
+
+  if((d.semanas||[]).length){
+    sec('Registro Fotografico por Semana');
+    d.semanas.forEach(sem=>{
+      chk(16);
+      doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(45,106,159);
+      doc.text(cl(`Semana ${sem.numero}${sem.rango?' - '+sem.rango:''}`),M,y);y+=5;
+      doc.setTextColor(26,32,44);
+      if(sem.resumen_semana)para(sem.resumen_semana,2);
+      (sem.fotos_seleccionadas||[]).forEach((f,fi)=>{
+        chk(12);
+        doc.setFont('helvetica','bold');doc.setFontSize(7);
+        doc.text(cl(`Foto ${fi+1}: ${f.descripcion||'—'}`),M+4,y);y+=4;
+        if(f.criterio_seleccion){doc.setFont('helvetica','italic');doc.text(cl('Criterio: '+f.criterio_seleccion),M+4,y);y+=4;}
+        doc.setFont('helvetica','normal');
+      });
+      y+=3;
+    });
+  }
+
+  if((d.observaciones_generales||[]).length){sec('Observaciones Generales');d.observaciones_generales.forEach(o=>para('- '+o,2));y+=2;}
+  if((d.comunicaciones_mvc||[]).length){sec('Comunicaciones con MVC');d.comunicaciones_mvc.forEach(o=>para('- '+o,2));y+=2;}
+  if((d.planificacion_proxima||[]).length){sec('Planificacion Periodo Siguiente');d.planificacion_proxima.forEach(o=>para('- '+o,2));}
+
+  const pgs=doc.getNumberOfPages();
+  for(let i=1;i<=pgs;i++){
+    doc.setPage(i);doc.setFontSize(7);doc.setTextColor(150);
+    doc.text(`Elaborado por: ${cl(d.elab)} · ${new Date().toLocaleString('es-CL')} · Pag. ${i}/${pgs}`,M,292);
+    if(d.cod){doc.setFont('helvetica','bold');doc.setTextColor(180,100,40);doc.text(d.cod,W-M,292,{align:'right'});}
+  }
+
+  const blob=doc.output('blob');
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`${d.cod||'informe'}_${d.fi}_${d.ff}.pdf`;
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},300);
+  tst('PDF descargado correctamente');
+}
+
+// Inicializar
+updTipo();
+try{const k=localStorage.getItem('_ak');if(k)document.getElementById('apikey').value=k;}catch(e){}
+</script>
+</body>
+</html>
