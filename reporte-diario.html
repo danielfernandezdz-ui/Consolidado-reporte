@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Reporte Diario Supervisor</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f0f4f8;color:#1a202c;min-height:100vh}
+header{background:#1a3a5c;color:#fff;padding:16px 24px;display:flex;align-items:center;gap:16px}
+.logo{font-size:20px;font-weight:600}.sub{font-size:12px;color:#a0c4e8;margin-top:2px}
+.badge{background:#2d6a9f;color:#fff;font-size:11px;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.container{max-width:860px;margin:24px auto;padding:0 16px 60px}
+.card{background:#fff;border-radius:12px;border:0.5px solid #d1d9e0;padding:24px;margin-bottom:20px}
+.card-title{font-size:13px;font-weight:600;color:#2d6a9f;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #e8edf2}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+label{display:block;font-size:12px;color:#4a5568;margin-bottom:4px;font-weight:500}
+input,select,textarea{width:100%;background:#f7fafc;border:0.5px solid #cbd5e0;border-radius:8px;padding:9px 12px;font-size:13px;color:#1a202c;font-family:inherit;outline:none;transition:border .15s;spellcheck:true}
+input[type=text],textarea{-webkit-spell-checking:true;spell-checking:normal}
+input:focus,select:focus,textarea:focus{border-color:#2d6a9f;background:#fff}
+textarea{resize:vertical;min-height:80px;line-height:1.5}
+.ssub{font-size:12px;font-weight:600;color:#4a5568;margin:16px 0 10px;text-transform:uppercase;letter-spacing:.3px}
+.pt{width:100%;border-collapse:collapse;font-size:12px}
+.pt th{background:#eef4fb;color:#2d6a9f;padding:8px 10px;text-align:left;font-weight:600;border-bottom:1px solid #d1d9e0}
+.pt td{padding:7px 8px;border-bottom:.5px solid #e8edf2}
+.pt input,.pt select{padding:5px 8px;font-size:12px}
+.badd{background:none;border:.5px dashed #2d6a9f;color:#2d6a9f;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;margin-top:8px;font-family:inherit}
+.badd:hover{background:#eef4fb}
+.bdel{background:none;border:none;color:#e53e3e;cursor:pointer;font-size:15px;padding:2px 6px}
+.ai{background:#f7fafc;border:.5px solid #d1d9e0;border-radius:8px;padding:14px;margin-bottom:10px;position:relative}
+.ai select,.ai textarea{margin-bottom:8px}
+.bda{position:absolute;top:10px;right:10px;background:none;border:none;color:#a0aec0;cursor:pointer;font-size:16px}
+.bda:hover{color:#e53e3e}
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ck{display:flex;align-items:center;gap:8px;background:#f7fafc;border:.5px solid #d1d9e0;border-radius:8px;padding:9px 12px;cursor:pointer}
+.ck input[type=checkbox]{width:16px;height:16px;accent-color:#2d6a9f;cursor:pointer;flex-shrink:0}
+.ck label{font-size:12px;color:#2d3748;margin:0;cursor:pointer;font-weight:400}
+.ck.on{background:#eef4fb;border-color:#2d6a9f}
+.smf{display:flex;gap:10px;margin-top:10px}
+.sb{flex:1;padding:8px;border:.5px solid #d1d9e0;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:#f7fafc}
+.sb.v.on{background:#c6f6d5;border-color:#38a169;color:#276749}
+.sb.a.on{background:#fefcbf;border-color:#d69e2e;color:#744210}
+.sb.r.on{background:#fed7d7;border-color:#e53e3e;color:#822727}
+.mr{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:center;margin-bottom:6px}
+.mr input,.mr select{margin:0}
+.fz{border:1.5px dashed #cbd5e0;border-radius:10px;padding:24px;text-align:center;cursor:pointer;background:#f7fafc}
+.fz:hover{border-color:#2d6a9f;background:#eef4fb}
+.fz p{font-size:13px;color:#718096;margin-top:6px}
+.fp{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.ft{position:relative;width:100px}
+.ft img{width:100px;height:100px;object-fit:cover;border-radius:8px;border:.5px solid #d1d9e0}
+.fd{position:absolute;top:-5px;right:-5px;background:#e53e3e;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:20px;text-align:center}
+.fc{width:100px;margin-top:4px;font-size:11px;padding:4px 6px}
+.pr{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;margin-bottom:8px}
+.abar{background:#1a3a5c;border-radius:12px;padding:20px 24px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+.bdl{background:#e07b39;color:#fff;border:none;border-radius:8px;padding:12px 40px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+.bdl:hover{background:#c9682a}
+.bnw{background:#2d9e6b;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:none}
+.tst{position:fixed;bottom:24px;right:24px;background:#2d9e6b;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
+.tst.on{opacity:1}.tst.er{background:#e53e3e}
+@media(max-width:600px){.g2,.g3,.cg{grid-template-columns:1fr}.mr{grid-template-columns:1fr 1fr auto}}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="logo">Sustenting Chile SpA</div><div class="sub">Forestacion Barahona · MVC-SGS-CSER-001-2026</div></div>
+  <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+    <div class="badge">Reporte Diario Supervisor</div>
+    <div id="cph" style="font-size:11px;color:#6b9ec8;font-style:italic">Codigo se generara al descargar</div>
+    <div id="cbg" style="display:none;background:#e07b39;color:#fff;font-size:15px;font-weight:700;padding:6px 18px;border-radius:8px;letter-spacing:1px;font-family:monospace"></div>
+  </div>
+</header>
+
+<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:16px;padding:32px;max-width:460px;width:100%">
+    <div style="font-size:32px;text-align:center;margin-bottom:12px">⚠️</div>
+    <h2 style="font-size:16px;font-weight:700;text-align:center;margin-bottom:12px">Confirmar descarga del reporte</h2>
+    <p style="font-size:13px;color:#4a5568;line-height:1.7;text-align:center;margin-bottom:8px">Al confirmar se generara un <strong>codigo unico e irreversible</strong>.</p>
+    <div style="background:#fff8f0;border:1px solid #f6ad55;border-radius:8px;padding:12px 16px;margin-bottom:20px">
+      <p style="font-size:12px;color:#744210;line-height:1.6">El reporte quedara bloqueado y no podra editarse una vez descargado. Asegurate de que toda la informacion este correcta antes de continuar.</p>
+    </div>
+    <div style="display:flex;gap:12px">
+      <button id="mno" style="flex:1;padding:11px;border:.5px solid #cbd5e0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#f7fafc;color:#4a5568;font-family:inherit">Cancelar</button>
+      <button id="msi" style="flex:1;padding:11px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#e07b39;color:#fff;font-family:inherit">Confirmar y Descargar</button>
+    </div>
+  </div>
+</div>
+
+<div id="avbl" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2d3748;color:#fff;padding:10px 24px;border-radius:10px;font-size:12px;font-weight:500;z-index:998;align-items:center;gap:8px;white-space:nowrap">
+  Reporte bloqueado — codigo <span id="caviso" style="font-family:monospace;color:#f6ad55"></span>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="card-title">Informacion General</div>
+    <div class="g3">
+      <div><label>Fecha</label><input type="date" id="fecha"/></div>
+      <div><label>Supervisor</label><input type="text" id="sup" placeholder="Nombre completo" spellcheck="false"/></div>
+      <div><label>Condicion climatica</label>
+        <select id="clima"><option value="">Seleccionar...</option><option>Despejado</option><option>Parcialmente nublado</option><option>Nublado</option><option>Lluvia leve</option><option>Lluvia intensa</option><option>Viento fuerte</option><option>Nieve/helada</option></select>
+      </div>
+    </div>
+    <div class="g2" style="margin-top:14px">
+      <div><label>Temperatura (C)</label><input type="number" id="temp" placeholder="ej: 18"/></div>
+      <div><label>Indice UV</label>
+        <select id="uv"><option value="">Seleccionar...</option><option>Bajo (0-2)</option><option>Moderado (3-5)</option><option>Alto (6-7)</option><option>Muy alto (8-10)</option><option>Extremo (11+)</option></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Visitas DET / MVC</div>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <span style="font-size:13px;font-weight:500">Se realizaron visitas DET o MVC durante el dia?</span>
+      <div style="display:flex;gap:10px">
+        <button class="sb" id="vsi" onclick="togV(true)">Si</button>
+        <button class="sb" id="vno" onclick="togV(false)">No</button>
+      </div>
+    </div>
+    <div id="vdet" style="display:none;margin-top:18px">
+      <div class="ssub">Personas que visitaron</div>
+      <table class="pt" style="margin-bottom:8px">
+        <thead><tr><th>Nombre</th><th>Cargo / Institucion</th><th></th></tr></thead>
+        <tbody id="vbody">
+          <tr><td><input type="text" placeholder="Nombre visitante"/></td><td><input type="text" placeholder="Ej: Ingeniero MVC"/></td><td><button class="bdel" onclick="delR(this)">x</button></td></tr>
+        </tbody>
+      </table>
+      <button class="badd" onclick="addVis()">+ Agregar visitante</button>
+      <div style="margin-top:16px"><label>Detalle de la visita</label><textarea id="vobs" style="min-height:90px" placeholder="Motivo, temas, acuerdos, instrucciones..." spellcheck="true" lang="es"></textarea></div>
+      <div style="margin-top:14px">
+        <div class="ssub">Fotos y documentos de la visita</div>
+        <div class="fz" id="vfz" onclick="document.getElementById('vfi').click()"
+          ondragover="event.preventDefault();this.style.borderColor='#2d6a9f'"
+          ondragleave="this.style.borderColor='#cbd5e0'"
+          ondrop="dropV(event)">
+          <span style="font-size:24px">📎</span><p>Clic o arrastra fotos/PDF aqui</p>
+          <p style="font-size:11px;color:#a0aec0;margin-top:4px">JPG, PNG, PDF — Max. 5</p>
+        </div>
+        <input type="file" id="vfi" accept="image/*,.pdf" multiple style="display:none" onchange="addVF(event)"/>
+        <div class="fp" id="vfp"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Dotacion de Personal</div>
+    <table class="pt">
+      <thead><tr><th>Nombre</th><th>Cargo</th><th>Presente</th><th></th></tr></thead>
+      <tbody id="pbody"></tbody>
+    </table>
+    <button class="badd" id="bap">+ Agregar persona</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Actividades del Dia</div>
+    <div id="alist"></div>
+    <button class="badd" id="baa">+ Agregar actividad</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Variables de Seguridad</div>
+    <div class="ssub">Documentos realizados</div>
+    <div class="cg" id="dseg">
+      <div class="ck" onclick="togCk(this)"><input type="checkbox"/> <label>ART / PTS firmado</label></div>
+      <div class="ck" onclick="togCk(this)"><input type="checkbox"/> <label>ODI difundida</label></div>
+      <div class="ck" onclick="togCk(this)"><input type="checkbox"/> <label>Charla diaria de seguridad</label></div>
+      <div class="ck" onclick="togCk(this)"><input type="checkbox"/> <label>Check list vehiculos</label></div>
+      <div class="ck" onclick="togCk(this)"><input type="checkbox"/> <label>Check list herramientas</label></div>
+      <div class="ck" onclick="togCk(this)"><input type="checkbox"/> <label>Test alcohol/drogas</label></div>
+      <div class="ck" onclick="togCk(this)"><input type="checkbox"/> <label>Protocolo radiacion UV</label></div>
+      <div class="ck" onclick="togCk(this)"><input type="checkbox"/> <label>Registro asistencia R-022</label></div>
+      <div class="ck" onclick="togCk(this);togOt(this,'odo')" style="grid-column:1/-1"><input type="checkbox"/> <label>Otros</label></div>
+    </div>
+    <div id="odo" style="display:none;margin-top:8px"><label>Especificar</label><input type="text" id="odot" placeholder="Ej: Permiso trabajo en altura..."/></div>
+    <div class="ssub" style="margin-top:18px">EPP utilizado</div>
+    <div class="cg" id="eseg">
+      <div class="ck" onclick="togCk(this)"><input type="checkbox"/> <label>Casco</label></div>
+      <div class="ck" onclick="togCk(this)"><input type="checkbox"/> <label>Lentes de seguridad</label></div>
+      <div class="ck" onclick="togCk(this)"><input type="checkbox"/> <label>Guantes</label></div>
+      <div class="ck" onclick="togCk(this)"><input type="checkbox"/> <label>Calzado de seguridad</label></div>
+      <div class="ck" onclick="togCk(this)"><input type="checkbox"/> <label>Chaleco reflectante</label></div>
+      <div class="ck" onclick="togCk(this)"><input type="checkbox"/> <label>Ropa manga larga</label></div>
+      <div class="ck" onclick="togCk(this)"><input type="checkbox"/> <label>Bloqueador solar FPS 50+</label></div>
+      <div class="ck" onclick="togCk(this)"><input type="checkbox"/> <label>Legionario</label></div>
+      <div class="ck" onclick="togCk(this);togOt(this,'oep')" style="grid-column:1/-1"><input type="checkbox"/> <label>Otros</label></div>
+    </div>
+    <div id="oep" style="display:none;margin-top:8px"><label>Especificar</label><input type="text" id="oept" placeholder="Ej: Arnes, protector auditivo..."/></div>
+    <div class="ssub" style="margin-top:18px">Estado general de seguridad</div>
+    <div class="smf">
+      <button class="sb v" onclick="setSm('v',this)">Sin novedades</button>
+      <button class="sb a" onclick="setSm('a',this)">Observaciones menores</button>
+      <button class="sb r" onclick="setSm('r',this)">Incidente / situacion critica</button>
+    </div>
+    <div style="margin-top:12px"><label>Descripcion de incidentes</label><textarea id="sobs" placeholder="Incidentes, cuasi accidentes, condiciones inseguras..." spellcheck="true" lang="es"></textarea></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Materiales e Insumos</div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin-bottom:6px">
+      <label style="font-size:11px">Material</label><label style="font-size:11px">Cantidad</label><label style="font-size:11px">Unidad</label><span></span>
+    </div>
+    <div id="mlist"></div>
+    <button class="badd" id="bam">+ Agregar material</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Registro Fotografico</div>
+    <div class="fz" id="ffz" onclick="document.getElementById('ffi').click()"
+      ondragover="event.preventDefault();this.style.borderColor='#2d6a9f'"
+      ondragleave="this.style.borderColor='#cbd5e0'"
+      ondrop="dropF(event)">
+      <span style="font-size:24px">📷</span><p>Clic o arrastra fotos aqui</p>
+      <p style="font-size:11px;color:#a0aec0;margin-top:4px">JPG, PNG — Max. 10</p>
+    </div>
+    <input type="file" id="ffi" accept="image/*" multiple style="display:none" onchange="addF(event)"/>
+    <div class="fp" id="ffp"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Observaciones Generales</div>
+    <div><label>Observaciones del dia</label><textarea id="obsg" style="min-height:100px" placeholder="Novedades del terreno, infraestructura, riego, rodales..." spellcheck="true" lang="es"></textarea></div>
+    <div style="margin-top:14px"><label>Comunicaciones con mandante (MVC)</label><textarea id="obsmvc" placeholder="Coordinaciones, solicitudes, instrucciones..." spellcheck="true" lang="es"></textarea></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Planificacion Proximos Dias</div>
+    <div id="plist"></div>
+    <button class="badd" id="bapl">+ Agregar actividad planificada</button>
+  </div>
+
+  <div class="abar">
+    <button class="bdl" id="bdl">Descargar Reporte</button>
+    <button class="bnw" id="bnw">Nuevo Reporte</button>
+  </div>
+</div>
+<div class="tst" id="tst"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const TRB=['Patricio Molina Roco','Karim Daud Molina','Camila Sanchez Lopez','Ruben Alfaro Sandoval','Carlos Reyes Aviles','Pablo Fernandez Diaz','Luis Vargas Castillo','Manuel Fredes Ubilla','Gustavo Duran Torres','Carolina Gonzalez Aguayo','Maria Ignacia Guzman Martinez','Nayadet Guzman Munoz','Paula Escobar Morales','Victor Aguilera Escalona','Cesar Figueroa Calderon','Ignacio Aguayo Estay','Mauricio Molina Roco','Daniel Fernandez Diaz','Cheril Fernandez Diaz'];
+const CRG=['Gerente de Proyecto','Director de Proyecto','Administrador de Contrato','Jefe de RRHH','Asesor SIG','Supervisor forestal','Coordinador forestal','Especialista riego','Especialista SIG','Maestro de terreno','Asistente de terreno','APR','Censista forestal'];
+const UND=['unidad','kg','litros','metros','ml','sacos','rollos','pares'];
+const CAT={'Monitoreo forestal':['Inventario forestal muestral','Censo forestal','Evaluacion estado sanitario','Evaluacion estructuras','Muestreo de suelos','Muestreo tejidos vegetales','Fotografias georreferenciadas','Otras'],'Mantencion rodales':['Mantencion tazas y micro terrazas','Poda de formacion','Desmalezado manual','Desmalezado con desbrozadora','Reposicion tutores','Reposicion protectores lagomorfos','Replante de individuos forestales','Otras'],'Sistema de riego':['Inspeccion punto abastecimiento','Inspeccion estanques 10.000L','Inspeccion distribucion rodales','Limpieza de filtros','Reparacion fugas','Programa de riego','Riego de mantencion','Otras'],'Mantencion camino':['Revision camino acceso (900m)','Mantencion con excavadora','Senalizacion vial','Otras'],'Cerco perimetral':['Inspeccion cerco perimetral','Retensionado malla','Reparacion portones','Mantencion senaleticas','Otras'],'Informes y admin':['Elaboracion informe mensual','Actualizacion base de datos SIG','Reunion coordinacion MVC','Registro planilla riego','Elaboracion ART/PTS','Otras'],'Inspeccion DET':['Revision normativa DET','Control acceso y transito','Verificacion acreditaciones','Reunion contraparte DET','Inspeccion estandares ECF','Reporte a DET','Otras'],'Inspeccion MVC':['Reunion contraparte MVC','Revision cumplimiento contrato','Inspeccion instalaciones faena','Verificacion documentacion MVC','Entrega de informes MVC','Otras'],'Inspecciones generales':['Inspeccion general terreno','Inspeccion vehiculos y equipos','Inspeccion herramientas','Inspeccion EPP dotacion','Inspeccion ambiental','Inspeccion infraestructura general','Otras'],'Otras':['Capacitacion interna','Traslado de personal o materiales','Gestion administrativa','Coordinacion proveedores','Actividad no contemplada']};
+
+let fotosD=[], varchD=[], smVal='', vVal=null, codR=null, bloq=false;
+
+function tst(msg,err){
+  const t=document.getElementById('tst');
+  t.textContent=msg;t.className='tst on'+(err?' er':'');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),3500);
+}
+
+function mkTrb(){return`<select style="padding:5px 8px;font-size:12px;width:100%"><option value="">-- Seleccionar --</option>${TRB.map(t=>`<option>${t}</option>`).join('')}</select>`;}
+function mkCrg(){return`<select style="padding:5px 8px;font-size:12px;width:100%">${CRG.map(c=>`<option>${c}</option>`).join('')}</select>`;}
+function mkPre(){return`<select style="padding:5px 8px;font-size:12px;width:100%"><option>Presente</option><option>Ausente</option><option>Medio dia</option></select>`;}
+function addP(){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td>${mkTrb()}</td><td>${mkCrg()}</td><td>${mkPre()}</td><td><button class="bdel" onclick="delR(this)">x</button></td>`;
+  document.getElementById('pbody').appendChild(tr);
+}
+
+function addA(){
+  const d=document.createElement('div');d.className='ai';
+  d.innerHTML=`<button class="bda" onclick="this.parentElement.remove()">x</button>
+    <div class="g2">
+      <div><label>Categoria</label><select onchange="updSub(this)"><option value="">Seleccionar...</option>${Object.keys(CAT).map(c=>`<option>${c}</option>`).join('')}</select></div>
+      <div><label>Actividad especifica</label><select class="sub"><option value="">-- elige categoria --</option></select></div>
+    </div>
+    <div style="margin-top:8px"><label>Descripcion / Hito logrado</label><textarea placeholder="Detalle..." style="min-height:65px" spellcheck="true" lang="es"></textarea></div>
+    <div class="g2" style="margin-top:8px">
+      <div><label>Sector / Rodal</label><select><option value="">Seleccionar...</option><option>Rodal 1</option><option>Rodal 2</option><option>Rodal 3</option><option>Camino acceso</option><option>Cerco perimetral</option><option>Instalacion faena (IIFF)</option><option>General / Todo el predio</option></select></div>
+      <div><label>Estado</label><select><option>Completado</option><option>En progreso</option><option>Pendiente</option><option>Bloqueado</option></select></div>
+    </div>`;
+  document.getElementById('alist').appendChild(d);
+}
+function updSub(sel){
+  const sub=sel.closest('.ai').querySelector('.sub');
+  const opts=CAT[sel.value]||[];
+  sub.innerHTML=`<option value="">Seleccionar...</option>${opts.map(o=>`<option>${o}</option>`).join('')}`;
+}
+
+function addM(){
+  const d=document.createElement('div');d.className='mr';
+  d.innerHTML=`<input type="text" placeholder="Material..."/><input type="number" placeholder="0" min="0"/><select>${UND.map(u=>`<option>${u}</option>`).join('')}</select><button class="bdel" onclick="this.parentElement.remove()">x</button>`;
+  document.getElementById('mlist').appendChild(d);
+}
+
+function addPl(){
+  const d=document.createElement('div');d.className='pr';
+  const m=new Date();m.setDate(m.getDate()+1);
+  d.innerHTML=`<input type="date" value="${m.toISOString().split('T')[0]}" style="width:140px"/><input type="text" placeholder="Actividad planificada..."/><button class="bdel" onclick="this.parentElement.remove()">x</button>`;
+  document.getElementById('plist').appendChild(d);
+}
+
+function delR(btn){btn.closest('tr').remove();}
+function togCk(el){const cb=el.querySelector('input[type=checkbox]');cb.checked=!cb.checked;el.classList.toggle('on',cb.checked);}
+function togOt(el,id){const cb=el.querySelector('input[type=checkbox]');document.getElementById(id).style.display=cb.checked?'block':'none';if(!cb.checked)document.getElementById(id+'t').value='';}
+function setSm(v,btn){smVal=v;document.querySelectorAll('.smf .sb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
+function togV(v){
+  vVal=v;
+  document.getElementById('vsi').className='sb'+(v===true?' v on':'');
+  document.getElementById('vno').className='sb'+(v===false?' r on':'');
+  document.getElementById('vdet').style.display=v?'block':'none';
+}
+function addVis(){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input type="text" placeholder="Nombre"/></td><td><input type="text" placeholder="Cargo / Institucion"/></td><td><button class="bdel" onclick="delR(this)">x</button></td>`;
+  document.getElementById('vbody').appendChild(tr);
+}
+
+function dropV(e){e.preventDefault();document.getElementById('vfz').style.borderColor='#cbd5e0';procV([...e.dataTransfer.files]);}
+function addVF(e){procV([...e.target.files]);e.target.value='';}
+function procV(files){
+  const valid=files.filter(f=>f.type.startsWith('image/')||f.type==='application/pdf');
+  if(!valid.length){tst('Solo imagenes o PDF',true);return;}
+  if(varchD.length+valid.length>5){tst('Max. 5 archivos',true);return;}
+  valid.forEach(f=>{const r=new FileReader();r.onload=ev=>{varchD.push({src:ev.target.result,tipo:f.type==='application/pdf'?'pdf':'img',cap:''});rendV();};r.readAsDataURL(f);});
+}
+function rendV(){
+  const c=document.getElementById('vfp');c.innerHTML='';
+  varchD.forEach((f,i)=>{
+    const d=document.createElement('div');d.className='ft';
+    if(f.tipo==='img'){
+      d.innerHTML=`<img src="${f.src}"/><button class="fd" onclick="delVF(${i})">x</button><input class="fc" type="text" placeholder="Descripcion..." id="vcap${i}" spellcheck="true" lang="es"/>`;
+    }else{
+      d.innerHTML=`<div style="width:100px;height:100px;border-radius:8px;border:.5px solid #d1d9e0;background:#f7fafc;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:28px">📄</span><span style="font-size:10px;color:#718096">PDF</span></div><button class="fd" onclick="delVF(${i})">x</button><input class="fc" type="text" placeholder="Descripcion..." id="vcap${i}" spellcheck="true" lang="es"/>`;
+    }
+    c.appendChild(d);
+  });
+}
+function delVF(i){varchD.splice(i,1);rendV();}
+
+function dropF(e){e.preventDefault();document.getElementById('ffz').style.borderColor='#cbd5e0';procF([...e.dataTransfer.files].filter(f=>f.type.startsWith('image/')));}
+function addF(e){procF([...e.target.files]);e.target.value='';}
+function procF(files){
+  if(!files.length){tst('Solo imagenes',true);return;}
+  if(fotosD.length+files.length>10){tst('Max. 10 fotos',true);return;}
+  files.forEach(f=>{const r=new FileReader();r.onload=ev=>{fotosD.push({src:ev.target.result,cap:''});rendF();};r.readAsDataURL(f);});
+}
+function rendF(){
+  const c=document.getElementById('ffp');c.innerHTML='';
+  fotosD.forEach((f,i)=>{const d=document.createElement('div');d.className='ft';d.innerHTML=`<img src="${f.src}"/><button class="fd" onclick="delF(${i})">x</button><input class="fc" type="text" placeholder="Descripcion..." id="fcap${i}" spellcheck="true" lang="es"/>`;c.appendChild(d);});
+}
+function delF(i){fotosD.splice(i,1);rendF();}
+
+function getCaps(){
+  varchD.forEach((f,i)=>{const el=document.getElementById('vcap'+i);if(el)f.cap=el.value;});
+  fotosD.forEach((f,i)=>{const el=document.getElementById('fcap'+i);if(el)f.cap=el.value;});
+}
+
+function getData(){
+  getCaps();
+  const pers=[];
+  document.querySelectorAll('#pbody tr').forEach(tr=>{const s=tr.querySelectorAll('select');if(s.length>=3)pers.push({nom:s[0].value||'--',crg:s[1].value,pre:s[2].value});});
+  const acts=[];
+  document.querySelectorAll('.ai').forEach(a=>{const s=a.querySelectorAll('select');const t=a.querySelectorAll('textarea');acts.push({cat:s[0]?.value||'',act:s[1]?.value||'',desc:t[0]?.value||'',sec:s[2]?.value||'',est:s[3]?.value||''});});
+  const docs=[...document.querySelectorAll('#dseg .ck.on')].map(e=>e.querySelector('label').textContent.trim()).filter(x=>x!='Otros');
+  const epps=[...document.querySelectorAll('#eseg .ck.on')].map(e=>e.querySelector('label').textContent.trim()).filter(x=>x!='Otros');
+  const mats=[];
+  document.querySelectorAll('.mr').forEach(r=>{const i=r.querySelectorAll('input');const s=r.querySelector('select');if(i[0]?.value)mats.push({nom:i[0].value,cant:i[1]?.value||'',uni:s?.value||''});});
+  const plan=[];
+  document.querySelectorAll('.pr').forEach(p=>{const i=p.querySelectorAll('input');if(i[1]?.value)plan.push({fch:i[0]?.value||'',act:i[1].value});});
+  const vis=[];
+  document.querySelectorAll('#vbody tr').forEach(tr=>{const i=tr.querySelectorAll('input');if(i[0]?.value)vis.push({nom:i[0].value,crg:i[1]?.value||''});});
+  return{
+    fch:document.getElementById('fecha').value,
+    sup:document.getElementById('sup').value,
+    cli:document.getElementById('clima').value,
+    tmp:document.getElementById('temp').value,
+    uv:document.getElementById('uv').value,
+    pers,acts,docs,odoc:document.getElementById('odot').value,
+    epps,oepp:document.getElementById('oept').value,
+    sm:smVal,sobs:document.getElementById('sobs').value,
+    mats,vVal,vis,vobs:document.getElementById('vobs').value,
+    obsg:document.getElementById('obsg').value,
+    obsmvc:document.getElementById('obsmvc').value,
+    plan,fotos:fotosD,varc:varchD,cod:null
+  };
+}
+
+function mkPDF(d){
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4',putOnlyUsedFonts:true,compress:true});
+  doc.setCharSpace(0);
+  const W=210,M=15,CW=W-M*2;let y=15;
+  const cl=s=>{
+    if(!s)return'';
+    return s
+      .replace(/á/g,'\xe1').replace(/é/g,'\xe9').replace(/í/g,'\xed')
+      .replace(/ó/g,'\xf3').replace(/ú/g,'\xfa').replace(/ñ/g,'\xf1')
+      .replace(/Á/g,'\xc1').replace(/É/g,'\xc9').replace(/Í/g,'\xcd')
+      .replace(/Ó/g,'\xd3').replace(/Ú/g,'\xda').replace(/Ñ/g,'\xd1')
+      .replace(/ü/g,'\xfc').replace(/Ü/g,'\xdc')
+      .replace(/¿/g,'\xbf').replace(/¡/g,'\xa1')
+      .replace(/[^\x00-\xFF]/g,'');
+  };
+  doc.setFillColor(26,58,92);doc.rect(0,0,W,32,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(13);doc.setFont('helvetica','bold');
+  doc.text('SUSTENTING CHILE SpA - Reporte Diario Supervisor',M,10);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text('Forestacion Barahona - Contrato MVC-SGS-CSER-001-2026',M,16);
+  doc.text(`Fecha: ${d.fch} | Supervisor: ${cl(d.sup)||'--'} | Clima: ${cl(d.cli)} ${d.tmp?d.tmp+'C':''} | UV: ${cl(d.uv)}`,M,22);
+  if(d.cod){
+    doc.setFillColor(224,123,57);doc.roundedRect(W-72,4,62,14,3,3,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.text('CODIGO DE REPORTE',W-41,9,{align:'center'});
+    doc.setFontSize(10);doc.setFont('helvetica','bold');
+    doc.text(d.cod,W-41,15,{align:'center'});
+  }
+  y=40;
+  const sec=t=>{if(y>270){doc.addPage();y=15;}doc.setFillColor(238,244,251);doc.rect(M,y-4,CW,8,'F');doc.setTextColor(45,106,159);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text(cl(t).toUpperCase(),M+2,y+1);doc.setTextColor(26,32,44);doc.setFont('helvetica','normal');y+=10;};
+  const row=(l,v)=>{if(y>270){doc.addPage();y=15;}doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text(cl(l)+':',M,y);doc.setFont('helvetica','normal');const ln=doc.splitTextToSize(cl(v),CW-32);doc.text(ln,M+32,y);y+=ln.length*5+2;};
+  const para=t=>{if(!t)return;doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(26,32,44);const ln=doc.splitTextToSize(cl(t),CW);ln.forEach(l=>{if(y>270){doc.addPage();y=15;}doc.text(l,M,y);y+=5;});y+=2;};
+  sec('Visitas DET / MVC');
+  if(d.vVal===null)para('No registrado.');
+  else if(!d.vVal)para('Sin visitas durante el dia.');
+  else{
+    if(d.vis.length){doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('Personas:',M,y);y+=5;d.vis.forEach(v=>{if(y>270){doc.addPage();y=15;}doc.setFont('helvetica','normal');doc.text(`- ${cl(v.nom)}${v.crg?' - '+cl(v.crg):''}`,M+2,y);y+=5;});}
+    if(d.vobs){y+=2;row('Detalle',d.vobs);}
+    if(d.varc.length){
+      y+=2;doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text(`Archivos adjuntos (${d.varc.length}):`,M,y);y+=5;
+      d.varc.forEach((f,i)=>{
+        if(y>270){doc.addPage();y=15;}
+        const cap=cl(f.cap||`Archivo ${i+1}`);
+        doc.setFont('helvetica','normal');doc.text(`- ${cap}`,M+2,y);y+=5;
+        if(f.tipo==='img'&&f.src){try{doc.addImage(f.src,'JPEG',M+2,y,80,55);}catch(e){}y+=58;}
+      });
+    }
+  }
+  y+=4;
+  sec('Dotacion de Personal');
+  d.pers.forEach(p=>{if(y>270){doc.addPage();y=15;}doc.setFontSize(8);doc.text(`- ${cl(p.nom)} | ${cl(p.crg)} | ${cl(p.pre)}`,M+2,y);y+=5;});
+  y+=4;
+  sec('Actividades del Dia');
+  d.acts.forEach((a,i)=>{
+    if(y>270){doc.addPage();y=15;}
+    doc.setFont('helvetica','bold');doc.setFontSize(8);
+    doc.text(`${i+1}. [${cl(a.cat)}] ${cl(a.act)} - ${cl(a.sec)} (${cl(a.est)})`,M+2,y);y+=5;
+    if(a.desc){doc.setFont('helvetica','normal');para(a.desc);}
+    y+=1;
+  });
+  sec('Variables de Seguridad');
+  const smT=d.sm==='v'?'SIN NOVEDADES':d.sm==='a'?'OBSERVACIONES MENORES':d.sm==='r'?'INCIDENTE / SITUACION CRITICA':'--';
+  row('Estado',smT);
+  row('Docs',[...d.docs,...(d.odoc?[d.odoc]:[])].join(', ')||'Ninguno');
+  row('EPP',[...d.epps,...(d.oepp?[d.oepp]:[])].join(', ')||'Ninguno');
+  if(d.sobs)row('Observaciones',d.sobs);
+  y+=2;
+  if(d.mats.length){sec('Materiales e Insumos');d.mats.forEach(m=>{if(y>270){doc.addPage();y=15;}doc.setFontSize(8);doc.text(`- ${cl(m.nom)}: ${m.cant} ${m.uni}`,M+2,y);y+=5;});y+=2;}
+  if(d.fotos.length){
+    sec('Registro Fotografico');
+    let col=0;
+    d.fotos.forEach((f,i)=>{
+      if(y>240){doc.addPage();y=15;col=0;}
+      const x=M+(col*(CW/2+5));
+      try{doc.addImage(f.src,'JPEG',x,y,85,60);}catch(e){}
+      doc.setFontSize(7);doc.text(cl(f.cap)||`Foto ${i+1}`,x,y+63);
+      col++;if(col>=2){col=0;y+=70;}
+    });
+    if(col>0)y+=70;y+=4;
+  }
+  sec('Observaciones Generales');
+  para(d.obsg||'Sin observaciones.');
+  if(d.obsmvc)row('Com. MVC',d.obsmvc);
+  y+=2;
+  if(d.plan.length){sec('Planificacion Proximos Dias');d.plan.forEach(p=>{if(y>270){doc.addPage();y=15;}doc.setFontSize(8);doc.text(`- ${p.fch}: ${cl(p.act)}`,M+2,y);y+=5;});}
+  const pgs=doc.getNumberOfPages();
+  for(let i=1;i<=pgs;i++){
+    doc.setPage(i);doc.setFontSize(7);doc.setTextColor(150);
+    doc.text(`Generado: ${new Date().toLocaleString('es-CL')} - Pag. ${i}/${pgs}`,M,290);
+    if(d.cod){doc.setFont('helvetica','bold');doc.setTextColor(180,100,40);doc.text(d.cod,W-M,290,{align:'right'});}
+  }
+  return doc.output('blob');
+}
+
+function genCod(){
+  const h=new Date();
+  const aa=String(h.getFullYear()).slice(-2);
+  const mm=String(h.getMonth()+1).padStart(2,'0');
+  const dd=String(h.getDate()).padStart(2,'0');
+  const base=`SUST-${aa}-${mm}-${dd}`;
+  const key=`rc_${base}`;
+  let n=1;
+  try{
+    const stored=localStorage.getItem(key);
+    n=stored?parseInt(stored)+1:1;
+    localStorage.setItem(key,n);
+    Object.keys(localStorage).forEach(k=>{if(k.startsWith('rc_SUST-')&&k!==key)localStorage.removeItem(k);});
+  }catch(e){
+    if(!window._contadores)window._contadores={};
+    if(!window._contadores[base])window._contadores[base]=0;
+    window._contadores[base]++;
+    n=window._contadores[base];
+  }
+  return`${base}-${n}`;
+}
+
+function confirm2(){
+  return new Promise(res=>{
+    document.getElementById('modal').style.display='flex';
+    document.getElementById('msi').onclick=()=>{document.getElementById('modal').style.display='none';res(true);};
+    document.getElementById('mno').onclick=()=>{document.getElementById('modal').style.display='none';res(false);};
+  });
+}
+
+function bloquear(){
+  bloq=true;
+  document.querySelectorAll('.container input,.container select,.container textarea').forEach(el=>{el.disabled=true;el.style.opacity='.7';el.style.cursor='not-allowed';});
+  document.querySelectorAll('.badd,.bdel,.bda,.fz,.ck,.smf .sb').forEach(el=>{el.style.pointerEvents='none';el.style.opacity='.6';});
+  const b=document.getElementById('bdl');
+  b.textContent='Reporte Bloqueado';b.style.background='#718096';b.style.cursor='not-allowed';b.disabled=true;
+  document.getElementById('bnw').style.display='block';
+  const av=document.getElementById('avbl');
+  av.style.display='flex';
+  document.getElementById('caviso').textContent=codR;
+}
+
+function limpiar(){
+  document.getElementById('fecha').valueAsDate=new Date();
+  ['sup','sobs','obsg','obsmvc','vobs','odot','oept'].forEach(id=>document.getElementById(id).value='');
+  ['clima','uv'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('temp').value='';
+  vVal=null;
+  document.getElementById('vsi').className='sb';
+  document.getElementById('vno').className='sb';
+  document.getElementById('vdet').style.display='none';
+  document.getElementById('vbody').innerHTML=`<tr><td><input type="text" placeholder="Nombre visitante"/></td><td><input type="text" placeholder="Ej: Ingeniero MVC"/></td><td><button class="bdel" onclick="delR(this)">x</button></td></tr>`;
+  varchD=[];document.getElementById('vfp').innerHTML='';
+  document.getElementById('pbody').innerHTML='';addP();
+  document.getElementById('alist').innerHTML='';addA();
+  document.querySelectorAll('.ck.on').forEach(el=>{el.classList.remove('on');el.querySelector('input[type=checkbox]').checked=false;});
+  document.getElementById('odo').style.display='none';
+  document.getElementById('oep').style.display='none';
+  smVal='';document.querySelectorAll('.smf .sb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('mlist').innerHTML='';addM();
+  fotosD=[];document.getElementById('ffp').innerHTML='';
+  document.getElementById('plist').innerHTML='';addPl();
+  codR=null;bloq=false;
+  document.getElementById('cbg').style.display='none';
+  document.getElementById('cph').style.display='block';
+  document.getElementById('avbl').style.display='none';
+  document.getElementById('bnw').style.display='none';
+  const b=document.getElementById('bdl');
+  b.textContent='Descargar Reporte';b.style.background='';b.style.cursor='';b.disabled=false;
+  document.querySelectorAll('.container input,.container select,.container textarea').forEach(el=>{el.disabled=false;el.style.opacity='';el.style.cursor='';});
+  document.querySelectorAll('.badd,.bdel,.bda,.fz,.ck,.smf .sb').forEach(el=>{el.style.pointerEvents='';el.style.opacity='';});
+  tst('Formulario listo para nuevo reporte');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+async function descargar(){
+  if(bloq)return;
+  const ok=await confirm2();if(!ok)return;
+  try{
+    tst('Generando reporte...');
+    codR=genCod();
+    document.getElementById('cbg').textContent=codR;
+    document.getElementById('cbg').style.display='inline-block';
+    document.getElementById('cph').style.display='none';
+    const d=getData();
+    d.cod=codR;
+    const blob=mkPDF(d);
+    const nombre=`${codR}_Reporte_Barahona_${d.fch||'sin_fecha'}`;
+    const pdfs=varchD.filter(f=>f.tipo==='pdf');
+    if(pdfs.length===0){
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');a.href=url;a.download=`${nombre}.pdf`;
+      document.body.appendChild(a);a.click();
+      setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},300);
+      tst('PDF descargado correctamente');
+    }else{
+      const zip=new JSZip();
+      zip.file(`${nombre}.pdf`,blob);
+      const car=zip.folder('documentos_adjuntos');
+      pdfs.forEach((f,i)=>{const b64=f.src.split(',')[1];car.file(f.cap||`documento_${i+1}.pdf`,b64,{base64:true});});
+      const zblob=await zip.generateAsync({type:'blob'});
+      const url=URL.createObjectURL(zblob);
+      const a=document.createElement('a');a.href=url;a.download=`${nombre}.zip`;
+      document.body.appendChild(a);a.click();
+      setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},300);
+      tst(`ZIP: PDF + ${pdfs.length} documento(s)`);
+    }
+    bloquear();
+  }catch(err){console.error(err);tst('Error al generar el reporte',true);}
+}
+
+document.getElementById('bap').addEventListener('click',addP);
+document.getElementById('baa').addEventListener('click',addA);
+document.getElementById('bam').addEventListener('click',addM);
+document.getElementById('bapl').addEventListener('click',addPl);
+document.getElementById('bdl').addEventListener('click',function(){if(!bloq)descargar();});
+document.getElementById('bnw').addEventListener('click',limpiar);
+
+document.getElementById('fecha').valueAsDate=new Date();
+addP();addA();addM();addPl();
+</script>
+</body>
+</html>
