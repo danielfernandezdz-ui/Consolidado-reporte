@@ -77,12 +77,7 @@ input:focus,select:focus,textarea:focus{border-color:#2d6a9f;background:#fff}
 
   <div id="panel-form">
 
-    <div class="api-banner">
-      <strong>⚙️ Configuración requerida:</strong> Para que la IA analice los reportes, ingresa tu API Key de Anthropic.
-      Puedes obtenerla en <a href="https://console.anthropic.com" target="_blank" style="color:#2d6a9f">console.anthropic.com</a>.
-      La clave se guarda solo en tu navegador y nunca se envía a ningún servidor externo.
-      <input type="password" id="apikey" placeholder="sk-ant-..." autocomplete="off"/>
-    </div>
+
 
     <div class="steps">
       <div class="step"><div class="step-n active" id="sn1">1</div><span>Configurar período</span></div>
@@ -175,12 +170,6 @@ function tst(msg,err){
   clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),3500);
 }
 
-function getKey(){
-  const k=document.getElementById('apikey').value.trim();
-  if(k) try{localStorage.setItem('_ak',k);}catch(e){}
-  return k||localStorage.getItem('_ak')||'';
-}
-
 function updTipo(){
   const t=document.getElementById('tipo').value;
   const hoy=new Date();
@@ -255,8 +244,7 @@ function prog(p,msg){document.getElementById('pbar').style.width=p+'%';document.
 
 async function generar(){
   if(!archivos.length){tst('Carga al menos un reporte PDF',true);return;}
-  const apiKey=getKey();
-  if(!apiKey){tst('Ingresa tu API Key de Anthropic',true);document.getElementById('apikey').focus();return;}
+
   const fi=document.getElementById('fini').value;
   const ff=document.getElementById('ffin').value;
   const desc=document.getElementById('desc-per').value||'Informe consolidado';
@@ -366,13 +354,9 @@ INSTRUCCIONES IMPORTANTES:
   });
 
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    const resp=await fetch('/api/consolidar',{
       method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key':apiKey,
-        'anthropic-version':'2023-06-01'
-      },
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:4000,
@@ -703,7 +687,7 @@ function descargarPDF(){
 
 // Inicializar
 updTipo();
-try{const k=localStorage.getItem('_ak');if(k)document.getElementById('apikey').value=k;}catch(e){}
+
 </script>
 </body>
 </html>
