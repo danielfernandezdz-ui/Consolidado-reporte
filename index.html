@@ -474,7 +474,7 @@ function cl(s){
     .replace(/ü/g,'\xfc').replace(/Ü/g,'\xdc').replace(/[^\x00-\xFF]/g,'');
 }
 
-function imgToJpeg(src,maxW=400,maxH=300){
+function imgToJpeg(src,maxW=500,maxH=380){
   return new Promise(res=>{
     const img=new Image();
     img.onload=()=>{
@@ -482,7 +482,7 @@ function imgToJpeg(src,maxW=400,maxH=300){
       const w=Math.round(img.width*ratio),h=Math.round(img.height*ratio);
       const cv=document.createElement('canvas');cv.width=w;cv.height=h;
       cv.getContext('2d').drawImage(img,0,0,w,h);
-      res({data:cv.toDataURL('image/jpeg',0.82).split(',')[1],w,h,ratio:w/h});
+      res({data:cv.toDataURL('image/jpeg',0.92).split(',')[1],w,h,ratio:w/h});
     };
     img.src=src;
   });
@@ -512,11 +512,11 @@ async function descargarPDF(){
     doc.setTextColor(26,32,44);doc.setFont('helvetica','normal');y+=14;
   };
 
-  const para=(t,indent=0,size=8)=>{
+  const para=(t,indent=0,size=8,lh=5.2)=>{
     if(!t)return;
     doc.setFontSize(size);doc.setFont('helvetica','normal');doc.setTextColor(26,32,44);
-    const ln=doc.splitTextToSize(cl(String(t)),CW-indent);
-    ln.forEach(l=>{chk(6);doc.text(l,M+indent,y);y+=5;});y+=1;
+    const ln=doc.splitTextToSize(cl(String(t)),CW-indent-2);
+    ln.forEach(l=>{chk(6);doc.text(l,M+indent,y);y+=lh;});y+=1.5;
   };
 
   const row=(l,v,lw=38)=>{
@@ -524,8 +524,8 @@ async function descargarPDF(){
     doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(45,106,159);
     doc.text(cl(l)+':',M,y);
     doc.setFont('helvetica','normal');doc.setTextColor(26,32,44);
-    const ln=doc.splitTextToSize(cl(String(v)),CW-lw);
-    doc.text(ln,M+lw,y);y+=ln.length*5+1;
+    const ln=doc.splitTextToSize(cl(String(v)),CW-lw-2);
+    doc.text(ln,M+lw,y);y+=ln.length*5.2+1;
   };
 
   const badge=(txt,bg,fg)=>{
@@ -605,8 +605,10 @@ async function descargarPDF(){
       doc.setTextColor(26,32,44);y+=5;
       if(a.detalle)para(strVal(a.detalle),3,7.5);
       if((a.actividades||[]).length){
-        doc.setFontSize(7.5);doc.setTextColor(80,80,80);
-        doc.text('  '+a.actividades.map(x=>cl(strVal(x))).join('  ·  '),M,y);y+=5;
+        doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
+        const actTxt=a.actividades.map(x=>cl(strVal(x))).join('  ·  ');
+        const actLn=doc.splitTextToSize(actTxt,CW-5);
+        actLn.forEach(l=>{chk(6);doc.text(l,M+3,y);y+=5;});
       }
       y+=2;
     });
