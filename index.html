@@ -297,7 +297,7 @@ Analiza TODOS los reportes diarios del supervisor adjuntos y genera un informe c
     "total_personas": 0,
     "dias_trabajados_acumulados": 0,
     "ausencias": 0,
-    "personal": []
+    "personal": ["Nombre Apellido - Cargo - Asistencia"]
   },
   "actividades": [
     {"categoria": "", "actividades": [], "total": 0, "detalle": ""}
@@ -317,7 +317,7 @@ Analiza TODOS los reportes diarios del supervisor adjuntos y genera un informe c
   ],
   "visitas": {
     "total": 0,
-    "detalle": []
+    "detalle": ["Nombre Visitante - Cargo - Fecha - Motivo"]
   },
   "clima": {
     "condiciones": [],
@@ -354,7 +354,7 @@ INSTRUCCIONES IMPORTANTES:
   });
 
   try{
-    const resp=await fetch('/api/proxy',{
+    const resp=await fetch('/api/consolidar',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -440,7 +440,7 @@ function mostrarResultado(d){
         <div style="background:#f7fafc;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:600;color:#2d9e6b">${dt.dias_trabajados_acumulados||0}</div><div style="font-size:11px;color:#718096">Días-hombre</div></div>
         <div style="background:#f7fafc;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:600;color:#e07b39">${dt.ausencias||0}</div><div style="font-size:11px;color:#718096">Ausencias</div></div>
       </div>
-      ${(dt.personal||[]).length?'<ul>'+dt.personal.map(p=>`<li>${p}</li>`).join('')+'</ul>':''}`
+      ${(dt.personal||[]).length?'<ul>'+dt.personal.map(p=>`<li>${typeof p==='object'?(p.nombre||p.name||p.nom||JSON.stringify(p)):p}</li>`).join('')+'</ul>':''}`
     ));
   }
 
@@ -481,7 +481,7 @@ function mostrarResultado(d){
 
   if(d.visitas&&(d.visitas.total>0||(d.visitas.detalle||[]).length)){
     let h=`<p>Total de visitas: <b>${d.visitas.total||0}</b></p>`;
-    if((d.visitas.detalle||[]).length)h+=`<ul style="margin-top:6px">${d.visitas.detalle.map(v=>`<li>${v}</li>`).join('')}</ul>`;
+    if((d.visitas.detalle||[]).length)h+=`<ul style="margin-top:6px">${d.visitas.detalle.map(v=>`<li>${typeof v==='object'?(v.nombre||v.name||v.nom||v.detalle||JSON.stringify(v)):v}</li>`).join('')}</ul>`;
     add(s('Visitas DET / MVC',h));
   }
 
