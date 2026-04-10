@@ -60,8 +60,6 @@ input:focus,select:focus,textarea:focus{border-color:#2d6a9f;background:#fff}
 .inf-cod{background:#e07b39;color:#fff;font-size:13px;font-weight:700;padding:5px 14px;border-radius:6px;font-family:monospace;display:inline-block;margin-top:8px}
 .tst{position:fixed;bottom:24px;right:24px;background:#2d9e6b;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
 .tst.on{opacity:1}.tst.er{background:#e53e3e}
-.api-banner{background:#fff8f0;border:1px solid #f6ad55;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:12px;color:#744210;line-height:1.6}
-.api-banner input{margin-top:8px;font-family:monospace;font-size:12px}
 #panel-result{display:none}
 #panel-form{display:block}
 @media(max-width:600px){.g2,.g3{grid-template-columns:1fr}.steps{gap:12px}.step-sep{display:none}}
@@ -74,11 +72,7 @@ input:focus,select:focus,textarea:focus{border-color:#2d6a9f;background:#fff}
 </header>
 
 <div class="container">
-
   <div id="panel-form">
-
-
-
     <div class="steps">
       <div class="step"><div class="step-n active" id="sn1">1</div><span>Configurar período</span></div>
       <div class="step-sep"></div>
@@ -150,12 +144,11 @@ input:focus,select:focus,textarea:focus{border-color:#2d6a9f;background:#fff}
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn-sec" onclick="volverForm()">← Nuevo informe</button>
-        <button class="btn-main" id="btn-pdf" onclick="descargarPDF()">Descargar PDF</button>
+        <button class="btn-main" onclick="descargarPDF()">Descargar PDF</button>
       </div>
     </div>
     <div id="result-content"></div>
   </div>
-
 </div>
 <div class="tst" id="tst"></div>
 
@@ -168,6 +161,15 @@ function tst(msg,err){
   const t=document.getElementById('tst');
   t.textContent=msg;t.className='tst on'+(err?' er':'');
   clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),3500);
+}
+
+function strVal(v){
+  if(!v)return'—';
+  if(typeof v==='string')return v;
+  if(typeof v==='object'){
+    return v.nombre||v.name||v.nom||v.cargo||v.detalle||v.descripcion||Object.values(v).filter(x=>typeof x==='string').join(' - ')||JSON.stringify(v);
+  }
+  return String(v);
 }
 
 function updTipo(){
@@ -210,8 +212,7 @@ function onFiles(e){addFiles([...e.target.files]);e.target.value='';}
 function addFiles(files){
   const nuevos=files.filter(f=>!archivos.find(a=>a.name===f.name&&a.size===f.size));
   if(archivos.length+nuevos.length>30){tst('Máximo 30 archivos',true);return;}
-  archivos.push(...nuevos);
-  rendFiles();
+  archivos.push(...nuevos);rendFiles();
 }
 function rmFile(i){archivos.splice(i,1);rendFiles();}
 function rendFiles(){
@@ -244,7 +245,6 @@ function prog(p,msg){document.getElementById('pbar').style.width=p+'%';document.
 
 async function generar(){
   if(!archivos.length){tst('Carga al menos un reporte PDF',true);return;}
-
   const fi=document.getElementById('fini').value;
   const ff=document.getElementById('ffin').value;
   const desc=document.getElementById('desc-per').value||'Informe consolidado';
@@ -261,106 +261,96 @@ async function generar(){
   const pdfs=[];
   for(let i=0;i<archivos.length;i++){
     log(`Procesando: ${archivos[i].name}`);
-    prog(5+((i+1)/archivos.length)*20,`Leyendo archivo ${i+1} de ${archivos.length}...`);
+    prog(5+((i+1)/archivos.length)*25,`Leyendo archivo ${i+1} de ${archivos.length}...`);
     const b64=await toB64(archivos[i]);
     pdfs.push({nombre:archivos[i].name,b64});
   }
 
   log('Enviando a IA para análisis...','ai');
-  prog(30,'Analizando contenido con Claude...');
+  prog(35,'Analizando contenido con Claude...');
 
   const userContent=[];
   pdfs.forEach(p=>{
-    userContent.push({
-      type:'document',
-      source:{type:'base64',media_type:'application/pdf',data:p.b64},
-      title:p.nombre
-    });
+    userContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:p.b64},title:p.nombre});
   });
 
-  userContent.push({
-    type:'text',
-    text:`Eres un experto en análisis de informes forestales para Sustenting Chile SpA, proyecto Forestación Barahona, contrato MVC-SGS-CSER-001-2026.
+  userContent.push({type:'text',text:`Eres un experto en análisis de informes forestales para Sustenting Chile SpA, proyecto Forestación Barahona, contrato MVC-SGS-CSER-001-2026.
 
-Analiza TODOS los reportes diarios del supervisor adjuntos y genera un informe consolidado en JSON con la siguiente estructura exacta:
+Analiza TODOS los reportes diarios adjuntos y genera un informe consolidado en JSON. IMPORTANTE: todos los arrays deben contener STRINGS, no objetos.
 
 {
-  "resumen_ejecutivo": "texto completo del resumen ejecutivo (mínimo 5 párrafos detallados)",
+  "resumen_ejecutivo": "texto mínimo 5 párrafos",
   "periodo": {
     "inicio": "${fi}",
     "fin": "${ff}",
     "descripcion": "${desc}",
     "dias_con_reporte": 0,
-    "supervisores": []
+    "supervisores": ["Nombre Apellido"]
   },
   "dotacion": {
     "total_personas": 0,
     "dias_trabajados_acumulados": 0,
     "ausencias": 0,
-    "personal": ["Nombre Apellido - Cargo - Asistencia"]
+    "personal": ["Nombre Apellido - Cargo - Presente/Ausente"]
   },
   "actividades": [
-    {"categoria": "", "actividades": [], "total": 0, "detalle": ""}
+    {"categoria": "nombre categoria", "actividades": ["actividad 1", "actividad 2"], "total": 0, "detalle": "descripcion"}
   ],
   "seguridad": {
-    "estado_general": "",
+    "estado_general": "texto",
     "dias_sin_novedad": 0,
     "dias_observaciones": 0,
     "dias_incidente": 0,
-    "documentos_frecuentes": [],
-    "epp_frecuente": [],
-    "incidentes": [],
-    "observaciones_relevantes": []
+    "documentos_frecuentes": ["documento 1"],
+    "epp_frecuente": ["epp 1"],
+    "incidentes": ["descripcion incidente"],
+    "observaciones_relevantes": ["observacion 1"]
   },
   "materiales": [
-    {"material": "", "cantidad_total": 0, "unidad": ""}
+    {"material": "nombre", "cantidad_total": 0, "unidad": "unidad"}
   ],
   "visitas": {
     "total": 0,
     "detalle": ["Nombre Visitante - Cargo - Fecha - Motivo"]
   },
   "clima": {
-    "condiciones": [],
-    "temperatura_promedio": "",
-    "uv_frecuente": ""
+    "condiciones": ["condicion 1"],
+    "temperatura_promedio": "XX°C",
+    "uv_frecuente": "nivel"
   },
-  "observaciones_generales": [],
-  "comunicaciones_mvc": [],
+  "observaciones_generales": ["observacion 1"],
+  "comunicaciones_mvc": ["comunicacion 1"],
   "semanas": [
     {
       "numero": 1,
-      "rango": "",
+      "rango": "DD Mes - DD Mes YYYY",
       "fotos_seleccionadas": [
-        {"descripcion": "descripción representativa de foto 1 seleccionada", "criterio_seleccion": "por qué fue elegida", "fecha_origen": ""},
-        {"descripcion": "descripción representativa de foto 2 seleccionada", "criterio_seleccion": "por qué fue elegida", "fecha_origen": ""}
+        {"descripcion": "descripcion foto 1", "criterio_seleccion": "criterio", "fecha_origen": "YYYY-MM-DD"},
+        {"descripcion": "descripcion foto 2", "criterio_seleccion": "criterio", "fecha_origen": "YYYY-MM-DD"}
       ],
-      "resumen_semana": ""
+      "resumen_semana": "texto resumen"
     }
   ],
-  "planificacion_proxima": [],
+  "planificacion_proxima": ["actividad planificada 1"],
   "indicadores": {
-    "avance_estimado": "",
-    "eficiencia_operacional": "",
-    "cumplimiento_seguridad": "",
-    "comentario_indicadores": ""
+    "avance_estimado": "porcentaje o descripcion",
+    "eficiencia_operacional": "descripcion",
+    "cumplimiento_seguridad": "porcentaje o descripcion",
+    "comentario_indicadores": "texto"
   }
 }
 
-INSTRUCCIONES IMPORTANTES:
-- Extrae y consolida TODA la información de TODOS los reportes
-- En "semanas", agrupa los reportes por semana y selecciona 2 fotos representativas por semana describiendo cuáles elegirías basado en el contenido más relevante
-- El resumen ejecutivo debe ser profesional, detallado y cubrir todos los aspectos del período
-- Responde SOLO con el JSON, sin texto adicional, sin markdown, sin backticks`
+Responde SOLO con el JSON válido, sin texto adicional, sin markdown, sin backticks.`
   });
 
   try{
-    const resp=await fetch('/api/consolidar',{
+    const resp=await fetch('/api/proxy',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:4000,
-        system:'Eres un experto en informes técnicos forestales. Respondes SIEMPRE con JSON válido y bien estructurado, sin texto adicional.',
+        system:'Eres un experto en informes técnicos forestales. Respondes SIEMPRE con JSON válido. Todos los arrays contienen strings, nunca objetos.',
         messages:[{role:'user',content:userContent}]
       })
     });
@@ -370,7 +360,7 @@ INSTRUCCIONES IMPORTANTES:
       throw new Error(err.error?.message||`HTTP ${resp.status}`);
     }
 
-    prog(80,'Procesando respuesta...');
+    prog(85,'Procesando respuesta...');
     log('Respuesta recibida. Procesando...','ai');
 
     const data=await resp.json();
@@ -383,7 +373,6 @@ INSTRUCCIONES IMPORTANTES:
     prog(100,'¡Informe generado!');
     log('Informe consolidado completado ✓','ok');
     document.getElementById('sn3').className='step-n done';
-
     setTimeout(()=>mostrarResultado(datosInforme),600);
 
   }catch(err){
@@ -399,34 +388,27 @@ function mostrarResultado(d){
   document.getElementById('panel-form').style.display='none';
   document.getElementById('panel-result').style.display='block';
   document.getElementById('res-sub').textContent=`${d.desc} · ${d.fi} al ${d.ff} · Elaborado por: ${d.elab}`;
-
-  const cod=genCod();
-  d.cod=cod;
-
-  const c=document.getElementById('result-content');
-  c.innerHTML='';
-
+  const cod=genCod();d.cod=cod;
+  const c=document.getElementById('result-content');c.innerHTML='';
   const add=(html)=>{const div=document.createElement('div');div.innerHTML=html;c.appendChild(div);};
   const s=(title,html)=>`<div class="card sec-inf"><h3>${title}</h3>${html}</div>`;
 
-  add(`<div class="inf-header">
-    <h2>${d.desc}</h2>
+  add(`<div class="inf-header"><h2>${d.desc}</h2>
     <p>Sustenting Chile SpA · Forestación Barahona · Contrato MVC-SGS-CSER-001-2026</p>
     <p style="margin-top:4px">Período: ${d.fi} al ${d.ff} · Elaborado por: ${d.elab}</p>
-    <div class="inf-cod">${cod}</div>
-  </div>`);
+    <div class="inf-cod">${cod}</div></div>`);
 
-  add(s('Resumen Ejecutivo',`<p>${(d.resumen_ejecutivo||'Sin resumen generado.').replace(/\n/g,'</p><p>')}</p>`));
+  add(s('Resumen Ejecutivo',`<p>${(d.resumen_ejecutivo||'Sin resumen.').replace(/\n/g,'</p><p>')}</p>`));
 
   if(d.periodo||d.indicadores){
     let h='<div class="g2" style="gap:10px">';
     if(d.periodo)h+=`<div><b style="font-size:12px">Período</b>
       <p>Días con reporte: <b>${d.periodo.dias_con_reporte||0}</b></p>
-      <p>Supervisores: ${(d.periodo.supervisores||[]).join(', ')||'—'}</p></div>`;
+      <p>Supervisores: ${(d.periodo.supervisores||[]).map(strVal).join(', ')||'—'}</p></div>`;
     if(d.indicadores)h+=`<div><b style="font-size:12px">Indicadores</b>
-      <p>Avance estimado: <span class="tag v">${d.indicadores.avance_estimado||'—'}</span></p>
-      <p>Seguridad: <span class="tag v">${d.indicadores.cumplimiento_seguridad||'—'}</span></p>
-      <p>Eficiencia: <span class="tag">${d.indicadores.eficiencia_operacional||'—'}</span></p>
+      <p>Avance: <span class="tag v">${strVal(d.indicadores.avance_estimado)}</span></p>
+      <p>Seguridad: <span class="tag v">${strVal(d.indicadores.cumplimiento_seguridad)}</span></p>
+      <p>Eficiencia: <span class="tag">${strVal(d.indicadores.eficiencia_operacional)}</span></p>
       ${d.indicadores.comentario_indicadores?`<p style="margin-top:6px">${d.indicadores.comentario_indicadores}</p>`:''}</div>`;
     h+='</div>';
     add(s('Indicadores del Período',h));
@@ -440,16 +422,16 @@ function mostrarResultado(d){
         <div style="background:#f7fafc;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:600;color:#2d9e6b">${dt.dias_trabajados_acumulados||0}</div><div style="font-size:11px;color:#718096">Días-hombre</div></div>
         <div style="background:#f7fafc;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:600;color:#e07b39">${dt.ausencias||0}</div><div style="font-size:11px;color:#718096">Ausencias</div></div>
       </div>
-      ${(dt.personal||[]).length?'<ul>'+dt.personal.map(p=>`<li>${typeof p==='object'?(p.nombre||p.name||p.nom||JSON.stringify(p)):p}</li>`).join('')+'</ul>':''}`
+      ${(dt.personal||[]).length?'<ul>'+dt.personal.map(p=>`<li>${strVal(p)}</li>`).join('')+'</ul>':''}`
     ));
   }
 
   if((d.actividades||[]).length){
     let h='';
     d.actividades.forEach(a=>{
-      h+=`<div style="margin-bottom:12px"><b style="font-size:12px">${a.categoria}</b> <span class="tag">${a.total||0} registros</span>`;
-      if(a.detalle)h+=`<p style="margin-top:4px">${a.detalle}</p>`;
-      if((a.actividades||[]).length)h+=`<div style="margin-top:4px">${a.actividades.map(x=>`<span class="tag">${x}</span>`).join('')}</div>`;
+      h+=`<div style="margin-bottom:12px"><b style="font-size:12px">${strVal(a.categoria)}</b> <span class="tag">${a.total||0} registros</span>`;
+      if(a.detalle)h+=`<p style="margin-top:4px">${strVal(a.detalle)}</p>`;
+      if((a.actividades||[]).length)h+=`<div style="margin-top:4px">${a.actividades.map(x=>`<span class="tag">${strVal(x)}</span>`).join('')}</div>`;
       h+='</div>';
     });
     add(s('Actividades por Categoría',h));
@@ -457,37 +439,34 @@ function mostrarResultado(d){
 
   if(d.seguridad){
     const sg=d.seguridad;
-    const et=sg.estado_general||'';
+    const et=strVal(sg.estado_general);
     const ecls=et.toLowerCase().includes('novedad')?'v':et.toLowerCase().includes('incidente')?'r':'a';
-    let h=`<p>Estado general: <span class="tag ${ecls}">${et||'—'}</span></p>
+    let h=`<p>Estado general: <span class="tag ${ecls}">${et}</span></p>
       <div class="g3" style="gap:8px;margin:10px 0">
         <div style="background:#c6f6d5;border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:600;color:#276749">${sg.dias_sin_novedad||0}</div><div style="font-size:11px;color:#276749">Sin novedad</div></div>
         <div style="background:#fefcbf;border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:600;color:#744210">${sg.dias_observaciones||0}</div><div style="font-size:11px;color:#744210">Observaciones</div></div>
         <div style="background:#fed7d7;border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:600;color:#822727">${sg.dias_incidente||0}</div><div style="font-size:11px;color:#822727">Incidentes</div></div>
       </div>`;
-    if((sg.documentos_frecuentes||[]).length)h+=`<p style="margin-bottom:4px"><b style="font-size:12px">Documentos más frecuentes:</b></p><div>${sg.documentos_frecuentes.map(x=>`<span class="tag">${x}</span>`).join('')}</div>`;
-    if((sg.epp_frecuente||[]).length)h+=`<p style="margin:8px 0 4px"><b style="font-size:12px">EPP utilizado:</b></p><div>${sg.epp_frecuente.map(x=>`<span class="tag">${x}</span>`).join('')}</div>`;
-    if((sg.incidentes||[]).length)h+=`<p style="margin:8px 0 4px"><b style="font-size:12px">Incidentes registrados:</b></p><ul>${sg.incidentes.map(x=>`<li>${x}</li>`).join('')}</ul>`;
-    if((sg.observaciones_relevantes||[]).length)h+=`<p style="margin:8px 0 4px"><b style="font-size:12px">Observaciones relevantes:</b></p><ul>${sg.observaciones_relevantes.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+    if((sg.documentos_frecuentes||[]).length)h+=`<p style="margin-bottom:4px"><b style="font-size:12px">Documentos frecuentes:</b></p><div>${sg.documentos_frecuentes.map(x=>`<span class="tag">${strVal(x)}</span>`).join('')}</div>`;
+    if((sg.epp_frecuente||[]).length)h+=`<p style="margin:8px 0 4px"><b style="font-size:12px">EPP utilizado:</b></p><div>${sg.epp_frecuente.map(x=>`<span class="tag">${strVal(x)}</span>`).join('')}</div>`;
+    if((sg.incidentes||[]).length)h+=`<p style="margin:8px 0 4px"><b style="font-size:12px">Incidentes:</b></p><ul>${sg.incidentes.map(x=>`<li>${strVal(x)}</li>`).join('')}</ul>`;
+    if((sg.observaciones_relevantes||[]).length)h+=`<p style="margin:8px 0 4px"><b style="font-size:12px">Observaciones relevantes:</b></p><ul>${sg.observaciones_relevantes.map(x=>`<li>${strVal(x)}</li>`).join('')}</ul>`;
     add(s('Variables de Seguridad',h));
   }
 
   if((d.materiales||[]).length){
-    let h='<ul>';
-    d.materiales.forEach(m=>{h+=`<li>${m.material}: <b>${m.cantidad_total}</b> ${m.unidad}</li>`;});
-    h+='</ul>';
-    add(s('Materiales e Insumos Totales',h));
+    add(s('Materiales e Insumos',`<ul>${d.materiales.map(m=>`<li>${strVal(m.material)}: <b>${m.cantidad_total}</b> ${m.unidad}</li>`).join('')}</ul>`));
   }
 
   if(d.visitas&&(d.visitas.total>0||(d.visitas.detalle||[]).length)){
-    let h=`<p>Total de visitas: <b>${d.visitas.total||0}</b></p>`;
-    if((d.visitas.detalle||[]).length)h+=`<ul style="margin-top:6px">${d.visitas.detalle.map(v=>`<li>${typeof v==='object'?(v.nombre||v.name||v.nom||v.detalle||JSON.stringify(v)):v}</li>`).join('')}</ul>`;
+    let h=`<p>Total visitas: <b>${d.visitas.total||0}</b></p>`;
+    if((d.visitas.detalle||[]).length)h+=`<ul style="margin-top:6px">${d.visitas.detalle.map(v=>`<li>${strVal(v)}</li>`).join('')}</ul>`;
     add(s('Visitas DET / MVC',h));
   }
 
   if(d.clima){
-    let h=`<p>Temperatura promedio: <b>${d.clima.temperatura_promedio||'—'}</b> · UV frecuente: <b>${d.clima.uv_frecuente||'—'}</b></p>`;
-    if((d.clima.condiciones||[]).length)h+=`<div style="margin-top:6px">${d.clima.condiciones.map(c=>`<span class="tag">${c}</span>`).join('')}</div>`;
+    let h=`<p>Temperatura promedio: <b>${strVal(d.clima.temperatura_promedio)}</b> · UV frecuente: <b>${strVal(d.clima.uv_frecuente)}</b></p>`;
+    if((d.clima.condiciones||[]).length)h+=`<div style="margin-top:6px">${d.clima.condiciones.map(c=>`<span class="tag">${strVal(c)}</span>`).join('')}</div>`;
     add(s('Condiciones Climáticas',h));
   }
 
@@ -502,7 +481,7 @@ function mostrarResultado(d){
         h+=`<div style="background:#fff;border:.5px solid #d1d9e0;border-radius:8px;padding:10px">
           <div style="background:#eef4fb;border-radius:6px;height:80px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px">📷</div>
           <p style="font-size:12px;font-weight:600;color:#2d3748;margin-bottom:3px">Foto representativa ${fi+1}</p>
-          <p style="font-size:11px;color:#4a5568">${f.descripcion||'—'}</p>
+          <p style="font-size:11px;color:#4a5568">${strVal(f.descripcion)}</p>
           ${f.criterio_seleccion?`<p style="font-size:10px;color:#718096;margin-top:4px;font-style:italic">Criterio: ${f.criterio_seleccion}</p>`:''}
           ${f.fecha_origen?`<span class="tag" style="font-size:10px">${f.fecha_origen}</span>`:''}
         </div>`;
@@ -512,15 +491,9 @@ function mostrarResultado(d){
     add(s('Registro Fotográfico por Semana',h));
   }
 
-  if((d.observaciones_generales||[]).length){
-    add(s('Observaciones Generales',`<ul>${d.observaciones_generales.map(o=>`<li>${o}</li>`).join('')}</ul>`));
-  }
-  if((d.comunicaciones_mvc||[]).length){
-    add(s('Comunicaciones con MVC',`<ul>${d.comunicaciones_mvc.map(o=>`<li>${o}</li>`).join('')}</ul>`));
-  }
-  if((d.planificacion_proxima||[]).length){
-    add(s('Planificación Período Siguiente',`<ul>${d.planificacion_proxima.map(o=>`<li>${o}</li>`).join('')}</ul>`));
-  }
+  if((d.observaciones_generales||[]).length)add(s('Observaciones Generales',`<ul>${d.observaciones_generales.map(o=>`<li>${strVal(o)}</li>`).join('')}</ul>`));
+  if((d.comunicaciones_mvc||[]).length)add(s('Comunicaciones con MVC',`<ul>${d.comunicaciones_mvc.map(o=>`<li>${strVal(o)}</li>`).join('')}</ul>`));
+  if((d.planificacion_proxima||[]).length)add(s('Planificación Período Siguiente',`<ul>${d.planificacion_proxima.map(o=>`<li>${strVal(o)}</li>`).join('')}</ul>`));
 
   window.scrollTo({top:0,behavior:'smooth'});
   tst('Informe generado correctamente ✓');
@@ -576,35 +549,35 @@ function descargarPDF(){
   doc.text('SUSTENTING CHILE SpA',M,10);
   doc.setFontSize(9);doc.setFont('helvetica','normal');
   doc.text(cl(d.desc),M,16);
-  doc.text(`Forestacion Barahona · MVC-SGS-CSER-001-2026 · ${d.fi} al ${d.ff}`,M,22);
+  doc.text(`Forestacion Barahona - MVC-SGS-CSER-001-2026 - ${d.fi} al ${d.ff}`,M,22);
   if(d.cod){
     doc.setFillColor(224,123,57);doc.roundedRect(W-68,4,58,14,3,3,'F');
-    doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont('helvetica','normal');
-    doc.text('CODIGO',W-39,9,{align:'center'});
-    doc.setFontSize(9);doc.setFont('helvetica','bold');
-    doc.text(d.cod,W-39,15,{align:'center'});
+    doc.setTextColor(255,255,255);doc.setFontSize(7);doc.text('CODIGO',W-39,9,{align:'center'});
+    doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text(d.cod,W-39,15,{align:'center'});
   }
   y=38;
 
   if(d.indicadores){
-    sec('Indicadores del Período');
-    row('Avance estimado',d.indicadores.avance_estimado||'—');
-    row('Cumplimiento seguridad',d.indicadores.cumplimiento_seguridad||'—');
-    row('Eficiencia operacional',d.indicadores.eficiencia_operacional||'—');
+    sec('Indicadores del Periodo');
+    row('Avance estimado',strVal(d.indicadores.avance_estimado));
+    row('Cumplimiento seguridad',strVal(d.indicadores.cumplimiento_seguridad));
+    row('Eficiencia operacional',strVal(d.indicadores.eficiencia_operacional));
     if(d.indicadores.comentario_indicadores)para(d.indicadores.comentario_indicadores);
     y+=2;
   }
 
   sec('Resumen Ejecutivo');
-  para(d.resumen_ejecutivo);
-  y+=4;
+  para(d.resumen_ejecutivo);y+=4;
 
   if(d.dotacion){
     sec('Dotacion de Personal');
     row('Total personas',d.dotacion.total_personas||0);
     row('Dias-hombre acumulados',d.dotacion.dias_trabajados_acumulados||0);
     row('Ausencias',d.dotacion.ausencias||0);
-    if((d.dotacion.personal||[]).length){doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('Personal:',M,y);y+=5;d.dotacion.personal.forEach(p=>{chk();doc.setFont('helvetica','normal');doc.text('- '+cl(p),M+2,y);y+=5;});}
+    if((d.dotacion.personal||[]).length){
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('Personal:',M,y);y+=5;
+      d.dotacion.personal.forEach(p=>{chk();doc.setFont('helvetica','normal');doc.text('- '+cl(strVal(p)),M+2,y);y+=5;});
+    }
     y+=2;
   }
 
@@ -612,37 +585,35 @@ function descargarPDF(){
     sec('Actividades por Categoria');
     d.actividades.forEach(a=>{
       chk();doc.setFontSize(8);doc.setFont('helvetica','bold');
-      doc.text(cl(a.categoria)+' ('+(a.total||0)+' registros)',M,y);y+=5;
-      if(a.detalle)para(a.detalle,2);
-      if((a.actividades||[]).length){doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text('  '+a.actividades.map(x=>cl(x)).join(' · '),M,y);y+=5;}
-    });
-    y+=2;
+      doc.text(cl(strVal(a.categoria))+' ('+(a.total||0)+' registros)',M,y);y+=5;
+      if(a.detalle)para(strVal(a.detalle),2);
+      if((a.actividades||[]).length){doc.setFont('helvetica','normal');doc.text('  '+a.actividades.map(x=>cl(strVal(x))).join(' - '),M,y);y+=5;}
+    });y+=2;
   }
 
   if(d.seguridad){
     const sg=d.seguridad;
     sec('Variables de Seguridad');
-    row('Estado general',sg.estado_general||'—');
+    row('Estado general',strVal(sg.estado_general));
     row('Dias sin novedad',sg.dias_sin_novedad||0);
     row('Dias con observaciones',sg.dias_observaciones||0);
     row('Dias con incidente',sg.dias_incidente||0);
-    if((sg.documentos_frecuentes||[]).length)row('Documentos frecuentes',sg.documentos_frecuentes.join(', '));
-    if((sg.epp_frecuente||[]).length)row('EPP utilizado',sg.epp_frecuente.join(', '));
-    if((sg.incidentes||[]).length){doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Incidentes:',M,y);y+=5;sg.incidentes.forEach(i=>para('- '+i,2));}
-    if((sg.observaciones_relevantes||[]).length){doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Observaciones relevantes:',M,y);y+=5;sg.observaciones_relevantes.forEach(i=>para('- '+i,2));}
+    if((sg.documentos_frecuentes||[]).length)row('Documentos frecuentes',sg.documentos_frecuentes.map(strVal).join(', '));
+    if((sg.epp_frecuente||[]).length)row('EPP utilizado',sg.epp_frecuente.map(strVal).join(', '));
+    if((sg.incidentes||[]).length){doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Incidentes:',M,y);y+=5;sg.incidentes.forEach(i=>para('- '+strVal(i),2));}
+    if((sg.observaciones_relevantes||[]).length){doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Observaciones relevantes:',M,y);y+=5;sg.observaciones_relevantes.forEach(i=>para('- '+strVal(i),2));}
     y+=2;
   }
 
   if((d.materiales||[]).length){
-    sec('Materiales e Insumos Totales');
-    d.materiales.forEach(m=>{chk();doc.setFontSize(8);doc.setFont('helvetica','normal');doc.text(`- ${cl(m.material)}: ${m.cantidad_total} ${m.unidad}`,M+2,y);y+=5;});
-    y+=2;
+    sec('Materiales e Insumos');
+    d.materiales.forEach(m=>{chk();doc.setFontSize(8);doc.setFont('helvetica','normal');doc.text(`- ${cl(strVal(m.material))}: ${m.cantidad_total} ${m.unidad}`,M+2,y);y+=5;});y+=2;
   }
 
   if(d.visitas&&d.visitas.total>0){
     sec('Visitas DET / MVC');
     row('Total visitas',d.visitas.total);
-    if((d.visitas.detalle||[]).length)d.visitas.detalle.forEach(v=>para('- '+v,2));
+    if((d.visitas.detalle||[]).length)d.visitas.detalle.forEach(v=>para('- '+strVal(v),2));
     y+=2;
   }
 
@@ -655,24 +626,21 @@ function descargarPDF(){
       doc.setTextColor(26,32,44);
       if(sem.resumen_semana)para(sem.resumen_semana,2);
       (sem.fotos_seleccionadas||[]).forEach((f,fi)=>{
-        chk(12);
-        doc.setFont('helvetica','bold');doc.setFontSize(7);
-        doc.text(cl(`Foto ${fi+1}: ${f.descripcion||'—'}`),M+4,y);y+=4;
+        chk(12);doc.setFont('helvetica','bold');doc.setFontSize(7);
+        doc.text(cl(`Foto ${fi+1}: ${strVal(f.descripcion)}`),M+4,y);y+=4;
         if(f.criterio_seleccion){doc.setFont('helvetica','italic');doc.text(cl('Criterio: '+f.criterio_seleccion),M+4,y);y+=4;}
-        doc.setFont('helvetica','normal');
-      });
-      y+=3;
+      });y+=3;
     });
   }
 
-  if((d.observaciones_generales||[]).length){sec('Observaciones Generales');d.observaciones_generales.forEach(o=>para('- '+o,2));y+=2;}
-  if((d.comunicaciones_mvc||[]).length){sec('Comunicaciones con MVC');d.comunicaciones_mvc.forEach(o=>para('- '+o,2));y+=2;}
-  if((d.planificacion_proxima||[]).length){sec('Planificacion Periodo Siguiente');d.planificacion_proxima.forEach(o=>para('- '+o,2));}
+  if((d.observaciones_generales||[]).length){sec('Observaciones Generales');d.observaciones_generales.forEach(o=>para('- '+strVal(o),2));y+=2;}
+  if((d.comunicaciones_mvc||[]).length){sec('Comunicaciones con MVC');d.comunicaciones_mvc.forEach(o=>para('- '+strVal(o),2));y+=2;}
+  if((d.planificacion_proxima||[]).length){sec('Planificacion Periodo Siguiente');d.planificacion_proxima.forEach(o=>para('- '+strVal(o),2));}
 
   const pgs=doc.getNumberOfPages();
   for(let i=1;i<=pgs;i++){
     doc.setPage(i);doc.setFontSize(7);doc.setTextColor(150);
-    doc.text(`Elaborado por: ${cl(d.elab)} · ${new Date().toLocaleString('es-CL')} · Pag. ${i}/${pgs}`,M,292);
+    doc.text(`Elaborado por: ${cl(d.elab)} - ${new Date().toLocaleString('es-CL')} - Pag. ${i}/${pgs}`,M,292);
     if(d.cod){doc.setFont('helvetica','bold');doc.setTextColor(180,100,40);doc.text(d.cod,W-M,292,{align:'right'});}
   }
 
@@ -685,9 +653,7 @@ function descargarPDF(){
   tst('PDF descargado correctamente');
 }
 
-// Inicializar
 updTipo();
-
 </script>
 </body>
 </html>
