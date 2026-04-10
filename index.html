@@ -19,8 +19,7 @@ input:focus,select:focus,textarea:focus{border-color:#2d6a9f;background:#fff}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
 .fz{border:1.5px dashed #cbd5e0;border-radius:10px;padding:28px;text-align:center;cursor:pointer;background:#f7fafc;transition:all .2s}
-.fz:hover{border-color:#2d6a9f;background:#eef4fb}
-.fz.drag{border-color:#2d6a9f;background:#eef4fb}
+.fz:hover,.fz.drag{border-color:#2d6a9f;background:#eef4fb}
 .fz-ico{font-size:28px;margin-bottom:8px}
 .fz p{font-size:13px;color:#718096}
 .fz small{font-size:11px;color:#a0aec0}
@@ -42,10 +41,7 @@ input:focus,select:focus,textarea:focus{border-color:#2d6a9f;background:#fff}
 .prog{background:#e8edf2;border-radius:8px;height:6px;overflow:hidden;margin:10px 0}
 .prog-bar{height:100%;background:#2d6a9f;border-radius:8px;transition:width .4s}
 .log{background:#f7fafc;border:.5px solid #e8edf2;border-radius:8px;padding:12px;font-size:12px;color:#4a5568;max-height:160px;overflow-y:auto;line-height:1.8;font-family:monospace}
-.log-line{display:block}
-.log-line.ok{color:#2d9e6b}
-.log-line.er{color:#e53e3e}
-.log-line.ai{color:#2d6a9f}
+.log-line{display:block}.log-line.ok{color:#2d9e6b}.log-line.er{color:#e53e3e}.log-line.ai{color:#2d6a9f}
 .sec-inf{margin-bottom:20px}
 .sec-inf h3{font-size:12px;font-weight:600;color:#2d6a9f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #e8edf2}
 .sec-inf p,.sec-inf li{font-size:13px;color:#2d3748;line-height:1.7;margin-bottom:4px}
@@ -58,11 +54,16 @@ input:focus,select:focus,textarea:focus{border-color:#2d6a9f;background:#fff}
 .inf-header h2{font-size:15px;font-weight:600}
 .inf-header p{font-size:11px;color:#a0c4e8;margin-top:3px}
 .inf-cod{background:#e07b39;color:#fff;font-size:13px;font-weight:700;padding:5px 14px;border-radius:6px;font-family:monospace;display:inline-block;margin-top:8px}
+.foto-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:12px}
+.foto-item{position:relative;border:.5px solid #d1d9e0;border-radius:8px;overflow:hidden;background:#f7fafc}
+.foto-item img{width:100%;height:110px;object-fit:cover;display:block}
+.foto-item .fdel{position:absolute;top:4px;right:4px;background:#e53e3e;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:20px;text-align:center}
+.foto-item input{border:none;border-top:.5px solid #e8edf2;border-radius:0;font-size:11px;padding:5px 8px;background:#fff}
 .tst{position:fixed;bottom:24px;right:24px;background:#2d9e6b;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
 .tst.on{opacity:1}.tst.er{background:#e53e3e}
 #panel-result{display:none}
 #panel-form{display:block}
-@media(max-width:600px){.g2,.g3{grid-template-columns:1fr}.steps{gap:12px}.step-sep{display:none}}
+@media(max-width:600px){.g2,.g3{grid-template-columns:1fr}.steps{gap:12px}.step-sep{display:none}.foto-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -84,8 +85,7 @@ input:focus,select:focus,textarea:focus{border-color:#2d6a9f;background:#fff}
     <div class="card">
       <div class="card-title">Configuración del Período</div>
       <div class="g3">
-        <div>
-          <label>Tipo de informe</label>
+        <div><label>Tipo de informe</label>
           <select id="tipo" onchange="updTipo()">
             <option value="semanal">Semanal</option>
             <option value="mensual" selected>Mensual</option>
@@ -98,14 +98,8 @@ input:focus,select:focus,textarea:focus{border-color:#2d6a9f;background:#fff}
         <div><label>Fecha inicio</label><input type="date" id="fini"/></div>
         <div><label>Fecha término</label><input type="date" id="ffin"/></div>
       </div>
-      <div style="margin-top:12px">
-        <label>Descripción del período</label>
-        <input type="text" id="desc-per" placeholder="Ej: Informe Mensual Marzo 2026"/>
-      </div>
-      <div style="margin-top:12px">
-        <label>Elaborado por</label>
-        <input type="text" id="elab" placeholder="Nombre del profesional responsable"/>
-      </div>
+      <div style="margin-top:12px"><label>Descripción del período</label><input type="text" id="desc-per" placeholder="Ej: Informe Mensual Marzo 2026"/></div>
+      <div style="margin-top:12px"><label>Elaborado por</label><input type="text" id="elab" placeholder="Nombre del profesional responsable"/></div>
     </div>
 
     <div class="card">
@@ -113,15 +107,32 @@ input:focus,select:focus,textarea:focus{border-color:#2d6a9f;background:#fff}
       <div class="fz" id="dropzone"
         ondragover="event.preventDefault();this.classList.add('drag')"
         ondragleave="this.classList.remove('drag')"
-        ondrop="onDrop(event)"
+        ondrop="onDropPDF(event)"
         onclick="document.getElementById('finput').click()">
         <div class="fz-ico">📄</div>
         <p>Arrastra los PDFs aquí o haz clic para seleccionar</p>
         <small>Reportes diarios generados con el formulario del supervisor · Máx. 30 archivos</small>
       </div>
-      <input type="file" id="finput" accept=".pdf,application/pdf" multiple style="display:none" onchange="onFiles(event)"/>
+      <input type="file" id="finput" accept=".pdf,application/pdf" multiple style="display:none" onchange="onFilesPDF(event)"/>
       <div class="files-wrap" id="flist"></div>
       <div id="fcount" style="font-size:12px;color:#718096;margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Registro Fotográfico del Período</div>
+      <p style="font-size:12px;color:#718096;margin-bottom:12px">Sube las fotos del período. Puedes agregar una descripción a cada una. La IA las distribuirá por semana en el informe.</p>
+      <div class="fz" id="dropzone-foto"
+        ondragover="event.preventDefault();this.classList.add('drag')"
+        ondragleave="this.classList.remove('drag')"
+        ondrop="onDropFoto(event)"
+        onclick="document.getElementById('finput-foto').click()">
+        <div class="fz-ico">📷</div>
+        <p>Arrastra las fotos aquí o haz clic para seleccionar</p>
+        <small>JPG, PNG · Máx. 30 fotos</small>
+      </div>
+      <input type="file" id="finput-foto" accept="image/*" multiple style="display:none" onchange="onFilesFoto(event)"/>
+      <div class="foto-grid" id="foto-grid"></div>
+      <div id="foto-count" style="font-size:12px;color:#718096;margin-top:8px"></div>
     </div>
 
     <div class="card" id="card-proceso" style="display:none">
@@ -155,28 +166,20 @@ input:focus,select:focus,textarea:focus{border-color:#2d6a9f;background:#fff}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-let archivos=[], datosInforme=null;
+let archivos=[], fotos=[], datosInforme=null;
 
-function tst(msg,err){
-  const t=document.getElementById('tst');
-  t.textContent=msg;t.className='tst on'+(err?' er':'');
-  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),3500);
-}
+function tst(msg,err){const t=document.getElementById('tst');t.textContent=msg;t.className='tst on'+(err?' er':'');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),3500);}
 
 function strVal(v){
-  if(!v)return'—';
-  if(typeof v==='string')return v;
-  if(typeof v==='object'){
-    return v.nombre||v.name||v.nom||v.cargo||v.detalle||v.descripcion||Object.values(v).filter(x=>typeof x==='string').join(' - ')||JSON.stringify(v);
-  }
+  if(v===null||v===undefined)return'—';
+  if(typeof v==='string')return v||'—';
+  if(typeof v==='object')return v.nombre||v.name||v.nom||v.cargo||v.detalle||v.descripcion||Object.values(v).filter(x=>typeof x==='string').join(' - ')||'—';
   return String(v);
 }
 
 function updTipo(){
-  const t=document.getElementById('tipo').value;
-  const hoy=new Date();
-  let fi,ff;
-  if(t==='semanal'){const dow=hoy.getDay()||7;fi=new Date(hoy);fi.setDate(hoy.getDate()-dow+1);ff=new Date(fi);ff.setDate(fi.getDate()+6);}
+  const t=document.getElementById('tipo').value,hoy=new Date();let fi,ff;
+  if(t==='semanal'){const d=hoy.getDay()||7;fi=new Date(hoy);fi.setDate(hoy.getDate()-d+1);ff=new Date(fi);ff.setDate(fi.getDate()+6);}
   else if(t==='mensual'){fi=new Date(hoy.getFullYear(),hoy.getMonth(),1);ff=new Date(hoy.getFullYear(),hoy.getMonth()+1,0);}
   else if(t==='trimestral'){const q=Math.floor(hoy.getMonth()/3);fi=new Date(hoy.getFullYear(),q*3,1);ff=new Date(hoy.getFullYear(),q*3+3,0);}
   else if(t==='semestral'){const s=hoy.getMonth()<6?0:6;fi=new Date(hoy.getFullYear(),s,1);ff=new Date(hoy.getFullYear(),s+6,0);}
@@ -186,14 +189,10 @@ function updTipo(){
   document.getElementById('ffin').value=ff.toISOString().split('T')[0];
   autoDesc();
 }
-
 function autoDesc(){
-  const t=document.getElementById('tipo').value;
-  const fi=document.getElementById('fini').value;
-  const ff=document.getElementById('ffin').value;
+  const t=document.getElementById('tipo').value,fi=document.getElementById('fini').value,ff=document.getElementById('ffin').value;
   if(!fi||!ff)return;
-  const d1=new Date(fi+'T12:00:00');
-  let desc='';
+  const d1=new Date(fi+'T12:00:00');let desc='';
   if(t==='mensual')desc=`Informe Mensual ${MESES[d1.getMonth()]} ${d1.getFullYear()}`;
   else if(t==='anual')desc=`Informe Anual ${d1.getFullYear()}`;
   else if(t==='trimestral')desc=`Informe Trimestral Q${Math.floor(d1.getMonth()/3)+1} ${d1.getFullYear()}`;
@@ -203,50 +202,52 @@ function autoDesc(){
   document.getElementById('desc-per').value=desc;
 }
 
-function onDrop(e){
-  e.preventDefault();
-  document.getElementById('dropzone').classList.remove('drag');
-  addFiles([...e.dataTransfer.files].filter(f=>f.type==='application/pdf'||f.name.endsWith('.pdf')));
+// PDFs
+function onDropPDF(e){e.preventDefault();document.getElementById('dropzone').classList.remove('drag');addPDFs([...e.dataTransfer.files].filter(f=>f.type==='application/pdf'||f.name.endsWith('.pdf')));}
+function onFilesPDF(e){addPDFs([...e.target.files]);e.target.value='';}
+function addPDFs(files){
+  const nv=files.filter(f=>!archivos.find(a=>a.name===f.name&&a.size===f.size));
+  if(archivos.length+nv.length>30){tst('Máximo 30 archivos PDF',true);return;}
+  archivos.push(...nv);rendPDFs();
 }
-function onFiles(e){addFiles([...e.target.files]);e.target.value='';}
-function addFiles(files){
-  const nuevos=files.filter(f=>!archivos.find(a=>a.name===f.name&&a.size===f.size));
-  if(archivos.length+nuevos.length>30){tst('Máximo 30 archivos',true);return;}
-  archivos.push(...nuevos);rendFiles();
-}
-function rmFile(i){archivos.splice(i,1);rendFiles();}
-function rendFiles(){
+function rmPDF(i){archivos.splice(i,1);rendPDFs();}
+function rendPDFs(){
   const c=document.getElementById('flist');c.innerHTML='';
-  archivos.forEach((f,i)=>{
-    const p=document.createElement('div');p.className='pill';
-    p.innerHTML=`📄 ${f.name} <button onclick="rmFile(${i})">×</button>`;
-    c.appendChild(p);
-  });
-  document.getElementById('fcount').textContent=archivos.length?`${archivos.length} archivo(s) cargado(s)`:'';
+  archivos.forEach((f,i)=>{const p=document.createElement('div');p.className='pill';p.innerHTML=`📄 ${f.name} <button onclick="rmPDF(${i})">×</button>`;c.appendChild(p);});
+  document.getElementById('fcount').textContent=archivos.length?`${archivos.length} reporte(s) cargado(s)`:'';
   document.getElementById('sn2').className='step-n'+(archivos.length>0?' done':'');
 }
 
-function toB64(file){
-  return new Promise((res,rej)=>{
+// Fotos
+function onDropFoto(e){e.preventDefault();document.getElementById('dropzone-foto').classList.remove('drag');addFotos([...e.dataTransfer.files].filter(f=>f.type.startsWith('image/')));}
+function onFilesFoto(e){addFotos([...e.target.files]);e.target.value='';}
+function addFotos(files){
+  if(fotos.length+files.length>30){tst('Máximo 30 fotos',true);return;}
+  files.forEach(f=>{
     const r=new FileReader();
-    r.onload=e=>res(e.target.result.split(',')[1]);
-    r.onerror=rej;
-    r.readAsDataURL(file);
+    r.onload=ev=>{fotos.push({src:ev.target.result,desc:''});rendFotos();};
+    r.readAsDataURL(f);
   });
 }
-
-function log(msg,cls=''){
-  const c=document.getElementById('log');
-  const s=document.createElement('span');s.className='log-line '+cls;
-  s.textContent='› '+msg;c.appendChild(s);c.appendChild(document.createElement('br'));
-  c.scrollTop=c.scrollHeight;
+function rmFoto(i){fotos.splice(i,1);rendFotos();}
+function rendFotos(){
+  const g=document.getElementById('foto-grid');g.innerHTML='';
+  fotos.forEach((f,i)=>{
+    const d=document.createElement('div');d.className='foto-item';
+    d.innerHTML=`<img src="${f.src}"/><button class="fdel" onclick="rmFoto(${i})">×</button><input type="text" placeholder="Descripción..." value="${f.desc||''}" oninput="fotos[${i}].desc=this.value"/>`;
+    g.appendChild(d);
+  });
+  document.getElementById('foto-count').textContent=fotos.length?`${fotos.length} foto(s) cargada(s)`:'';
 }
+
+function toB64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
+
+function log(msg,cls=''){const c=document.getElementById('log');const s=document.createElement('span');s.className='log-line '+cls;s.textContent='› '+msg;c.appendChild(s);c.appendChild(document.createElement('br'));c.scrollTop=c.scrollHeight;}
 function prog(p,msg){document.getElementById('pbar').style.width=p+'%';document.getElementById('pstat').textContent=msg;}
 
 async function generar(){
   if(!archivos.length){tst('Carga al menos un reporte PDF',true);return;}
-  const fi=document.getElementById('fini').value;
-  const ff=document.getElementById('ffin').value;
+  const fi=document.getElementById('fini').value,ff=document.getElementById('ffin').value;
   const desc=document.getElementById('desc-per').value||'Informe consolidado';
   const elab=document.getElementById('elab').value||'Supervisor';
   if(!fi||!ff){tst('Ingresa las fechas del período',true);return;}
@@ -254,133 +255,69 @@ async function generar(){
   document.getElementById('card-proceso').style.display='block';
   document.getElementById('btn-gen').disabled=true;
   document.getElementById('sn3').className='step-n active';
-
-  log('Iniciando análisis con IA...');
-  prog(5,'Preparando archivos...');
+  log('Iniciando análisis con IA...');prog(5,'Preparando archivos...');
 
   const pdfs=[];
   for(let i=0;i<archivos.length;i++){
     log(`Procesando: ${archivos[i].name}`);
-    prog(5+((i+1)/archivos.length)*25,`Leyendo archivo ${i+1} de ${archivos.length}...`);
-    const b64=await toB64(archivos[i]);
-    pdfs.push({nombre:archivos[i].name,b64});
+    prog(5+((i+1)/archivos.length)*25,`Leyendo PDF ${i+1} de ${archivos.length}...`);
+    pdfs.push({nombre:archivos[i].name,b64:await toB64(archivos[i])});
   }
 
-  log('Enviando a IA para análisis...','ai');
-  prog(35,'Analizando contenido con Claude...');
+  log('Enviando a IA...','ai');prog(35,'Analizando con Claude...');
 
   const userContent=[];
-  pdfs.forEach(p=>{
-    userContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:p.b64},title:p.nombre});
-  });
+  pdfs.forEach(p=>{userContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:p.b64},title:p.nombre});});
 
-  userContent.push({type:'text',text:`Eres un experto en análisis de informes forestales para Sustenting Chile SpA, proyecto Forestación Barahona, contrato MVC-SGS-CSER-001-2026.
+  const fotosDesc=fotos.map((f,i)=>`Foto ${i+1}: ${f.desc||'sin descripción'}`).join('\n');
 
-Analiza TODOS los reportes diarios adjuntos y genera un informe consolidado en JSON. IMPORTANTE: todos los arrays deben contener STRINGS, no objetos.
+  userContent.push({type:'text',text:`Eres experto en informes forestales para Sustenting Chile SpA, proyecto Forestación Barahona, contrato MVC-SGS-CSER-001-2026.
+
+Analiza TODOS los reportes diarios adjuntos. El usuario también ha cargado ${fotos.length} fotos del período:
+${fotosDesc}
+
+Genera un informe consolidado en JSON. TODOS los arrays deben contener STRINGS, nunca objetos.
 
 {
-  "resumen_ejecutivo": "texto mínimo 5 párrafos",
-  "periodo": {
-    "inicio": "${fi}",
-    "fin": "${ff}",
-    "descripcion": "${desc}",
-    "dias_con_reporte": 0,
-    "supervisores": ["Nombre Apellido"]
-  },
-  "dotacion": {
-    "total_personas": 0,
-    "dias_trabajados_acumulados": 0,
-    "ausencias": 0,
-    "personal": ["Nombre Apellido - Cargo - Presente/Ausente"]
-  },
-  "actividades": [
-    {"categoria": "nombre categoria", "actividades": ["actividad 1", "actividad 2"], "total": 0, "detalle": "descripcion"}
-  ],
-  "seguridad": {
-    "estado_general": "texto",
-    "dias_sin_novedad": 0,
-    "dias_observaciones": 0,
-    "dias_incidente": 0,
-    "documentos_frecuentes": ["documento 1"],
-    "epp_frecuente": ["epp 1"],
-    "incidentes": ["descripcion incidente"],
-    "observaciones_relevantes": ["observacion 1"]
-  },
-  "materiales": [
-    {"material": "nombre", "cantidad_total": 0, "unidad": "unidad"}
-  ],
-  "visitas": {
-    "total": 0,
-    "detalle": ["Nombre Visitante - Cargo - Fecha - Motivo"]
-  },
-  "clima": {
-    "condiciones": ["condicion 1"],
-    "temperatura_promedio": "XX°C",
-    "uv_frecuente": "nivel"
-  },
-  "observaciones_generales": ["observacion 1"],
-  "comunicaciones_mvc": ["comunicacion 1"],
-  "semanas": [
-    {
-      "numero": 1,
-      "rango": "DD Mes - DD Mes YYYY",
-      "fotos_seleccionadas": [
-        {"descripcion": "descripcion foto 1", "criterio_seleccion": "criterio", "fecha_origen": "YYYY-MM-DD"},
-        {"descripcion": "descripcion foto 2", "criterio_seleccion": "criterio", "fecha_origen": "YYYY-MM-DD"}
-      ],
-      "resumen_semana": "texto resumen"
-    }
-  ],
-  "planificacion_proxima": ["actividad planificada 1"],
-  "indicadores": {
-    "avance_estimado": "porcentaje o descripcion",
-    "eficiencia_operacional": "descripcion",
-    "cumplimiento_seguridad": "porcentaje o descripcion",
-    "comentario_indicadores": "texto"
-  }
+  "resumen_ejecutivo": "mínimo 5 párrafos detallados",
+  "periodo": {"inicio":"${fi}","fin":"${ff}","descripcion":"${desc}","dias_con_reporte":0,"supervisores":["Nombre Apellido"]},
+  "dotacion": {"total_personas":0,"dias_trabajados_acumulados":0,"ausencias":0,"personal":["Nombre - Cargo - Asistencia"]},
+  "actividades": [{"categoria":"nombre","actividades":["act1"],"total":0,"detalle":"descripcion"}],
+  "seguridad": {"estado_general":"texto","dias_sin_novedad":0,"dias_observaciones":0,"dias_incidente":0,"documentos_frecuentes":["doc1"],"epp_frecuente":["epp1"],"incidentes":["inc1"],"observaciones_relevantes":["obs1"]},
+  "materiales": [{"material":"nombre","cantidad_total":0,"unidad":"unidad"}],
+  "visitas": {"total":0,"detalle":["Nombre - Cargo - Fecha - Motivo"]},
+  "clima": {"condiciones":["condicion"],"temperatura_promedio":"XX°C","uv_frecuente":"nivel"},
+  "observaciones_generales": ["obs1"],
+  "comunicaciones_mvc": ["com1"],
+  "semanas": [{"numero":1,"rango":"DD Mes - DD Mes YYYY","fotos_indices":[0,1],"resumen_semana":"texto"}],
+  "planificacion_proxima": ["actividad1"],
+  "indicadores": {"avance_estimado":"texto","eficiencia_operacional":"texto","cumplimiento_seguridad":"texto","comentario_indicadores":"texto"}
 }
 
-Responde SOLO con el JSON válido, sin texto adicional, sin markdown, sin backticks.`
-  });
+En "semanas", el campo "fotos_indices" debe contener los índices (0-based) de las fotos más representativas para esa semana, seleccionando 2 por semana basándote en las descripciones proporcionadas.
+
+Responde SOLO con JSON válido, sin markdown, sin backticks.`});
 
   try{
-    const resp=await fetch('/api/proxy',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:4000,
-        system:'Eres un experto en informes técnicos forestales. Respondes SIEMPRE con JSON válido. Todos los arrays contienen strings, nunca objetos.',
-        messages:[{role:'user',content:userContent}]
-      })
-    });
+    const resp=await fetch('/api/proxy',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,
+        system:'Experto en informes forestales. Responde SOLO con JSON válido. Arrays siempre contienen strings.',
+        messages:[{role:'user',content:userContent}]})});
 
-    if(!resp.ok){
-      const err=await resp.json().catch(()=>({}));
-      throw new Error(err.error?.message||`HTTP ${resp.status}`);
-    }
+    if(!resp.ok){const err=await resp.json().catch(()=>({}));throw new Error(err.error?.message||`HTTP ${resp.status}`);}
 
-    prog(85,'Procesando respuesta...');
-    log('Respuesta recibida. Procesando...','ai');
-
+    prog(85,'Procesando respuesta...');log('Respuesta recibida...','ai');
     const data=await resp.json();
     let raw=data.content.map(b=>b.text||'').join('').trim();
     raw=raw.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
-
     const inf=JSON.parse(raw);
-    datosInforme={...inf,desc,fi,ff,elab,tipo:document.getElementById('tipo').value};
-
-    prog(100,'¡Informe generado!');
-    log('Informe consolidado completado ✓','ok');
+    datosInforme={...inf,desc,fi,ff,elab,tipo:document.getElementById('tipo').value,fotos:[...fotos]};
+    prog(100,'¡Informe generado!');log('Completado ✓','ok');
     document.getElementById('sn3').className='step-n done';
     setTimeout(()=>mostrarResultado(datosInforme),600);
-
   }catch(err){
-    log('Error: '+err.message,'er');
-    prog(0,'Error al procesar');
-    tst('Error: '+err.message,true);
-    document.getElementById('btn-gen').disabled=false;
-    document.getElementById('sn3').className='step-n';
+    log('Error: '+err.message,'er');prog(0,'Error');tst('Error: '+err.message,true);
+    document.getElementById('btn-gen').disabled=false;document.getElementById('sn3').className='step-n';
   }
 }
 
@@ -390,7 +327,7 @@ function mostrarResultado(d){
   document.getElementById('res-sub').textContent=`${d.desc} · ${d.fi} al ${d.ff} · Elaborado por: ${d.elab}`;
   const cod=genCod();d.cod=cod;
   const c=document.getElementById('result-content');c.innerHTML='';
-  const add=(html)=>{const div=document.createElement('div');div.innerHTML=html;c.appendChild(div);};
+  const add=html=>{const div=document.createElement('div');div.innerHTML=html;c.appendChild(div);};
   const s=(title,html)=>`<div class="card sec-inf"><h3>${title}</h3>${html}</div>`;
 
   add(`<div class="inf-header"><h2>${d.desc}</h2>
@@ -398,65 +335,58 @@ function mostrarResultado(d){
     <p style="margin-top:4px">Período: ${d.fi} al ${d.ff} · Elaborado por: ${d.elab}</p>
     <div class="inf-cod">${cod}</div></div>`);
 
-  add(s('Resumen Ejecutivo',`<p>${(d.resumen_ejecutivo||'Sin resumen.').replace(/\n/g,'</p><p>')}</p>`));
+  add(s('Resumen Ejecutivo',`<p>${(d.resumen_ejecutivo||'').replace(/\n/g,'</p><p>')}</p>`));
 
   if(d.periodo||d.indicadores){
     let h='<div class="g2" style="gap:10px">';
-    if(d.periodo)h+=`<div><b style="font-size:12px">Período</b>
-      <p>Días con reporte: <b>${d.periodo.dias_con_reporte||0}</b></p>
-      <p>Supervisores: ${(d.periodo.supervisores||[]).map(strVal).join(', ')||'—'}</p></div>`;
+    if(d.periodo)h+=`<div><b style="font-size:12px">Período</b><p>Días con reporte: <b>${d.periodo.dias_con_reporte||0}</b></p><p>Supervisores: ${(d.periodo.supervisores||[]).map(strVal).join(', ')||'—'}</p></div>`;
     if(d.indicadores)h+=`<div><b style="font-size:12px">Indicadores</b>
       <p>Avance: <span class="tag v">${strVal(d.indicadores.avance_estimado)}</span></p>
       <p>Seguridad: <span class="tag v">${strVal(d.indicadores.cumplimiento_seguridad)}</span></p>
       <p>Eficiencia: <span class="tag">${strVal(d.indicadores.eficiencia_operacional)}</span></p>
       ${d.indicadores.comentario_indicadores?`<p style="margin-top:6px">${d.indicadores.comentario_indicadores}</p>`:''}</div>`;
-    h+='</div>';
-    add(s('Indicadores del Período',h));
+    h+='</div>';add(s('Indicadores del Período',h));
   }
 
   if(d.dotacion){
     const dt=d.dotacion;
     add(s('Dotación de Personal',`
       <div class="g3" style="gap:8px;margin-bottom:10px">
-        <div style="background:#f7fafc;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:600;color:#2d6a9f">${dt.total_personas||0}</div><div style="font-size:11px;color:#718096">Total personas</div></div>
-        <div style="background:#f7fafc;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:600;color:#2d9e6b">${dt.dias_trabajados_acumulados||0}</div><div style="font-size:11px;color:#718096">Días-hombre</div></div>
-        <div style="background:#f7fafc;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:600;color:#e07b39">${dt.ausencias||0}</div><div style="font-size:11px;color:#718096">Ausencias</div></div>
+        <div style="background:#eef4fb;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:600;color:#2d6a9f">${dt.total_personas||0}</div><div style="font-size:11px;color:#4a5568">Total personas</div></div>
+        <div style="background:#e6f4ee;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:600;color:#2d9e6b">${dt.dias_trabajados_acumulados||0}</div><div style="font-size:11px;color:#4a5568">Días-hombre</div></div>
+        <div style="background:#fef3eb;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:600;color:#e07b39">${dt.ausencias||0}</div><div style="font-size:11px;color:#4a5568">Ausencias</div></div>
       </div>
-      ${(dt.personal||[]).length?'<ul>'+dt.personal.map(p=>`<li>${strVal(p)}</li>`).join('')+'</ul>':''}`
-    ));
+      ${(dt.personal||[]).length?'<ul>'+dt.personal.map(p=>`<li>${strVal(p)}</li>`).join('')+'</ul>':''}`));
   }
 
   if((d.actividades||[]).length){
     let h='';
     d.actividades.forEach(a=>{
-      h+=`<div style="margin-bottom:12px"><b style="font-size:12px">${strVal(a.categoria)}</b> <span class="tag">${a.total||0} registros</span>`;
+      h+=`<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:.5px solid #e8edf2"><b style="font-size:12px;color:#1a3a5c">${strVal(a.categoria)}</b> <span class="tag">${a.total||0} registros</span>`;
       if(a.detalle)h+=`<p style="margin-top:4px">${strVal(a.detalle)}</p>`;
-      if((a.actividades||[]).length)h+=`<div style="margin-top:4px">${a.actividades.map(x=>`<span class="tag">${strVal(x)}</span>`).join('')}</div>`;
+      if((a.actividades||[]).length)h+=`<div style="margin-top:6px">${a.actividades.map(x=>`<span class="tag">${strVal(x)}</span>`).join('')}</div>`;
       h+='</div>';
     });
     add(s('Actividades por Categoría',h));
   }
 
   if(d.seguridad){
-    const sg=d.seguridad;
-    const et=strVal(sg.estado_general);
+    const sg=d.seguridad,et=strVal(sg.estado_general);
     const ecls=et.toLowerCase().includes('novedad')?'v':et.toLowerCase().includes('incidente')?'r':'a';
-    let h=`<p>Estado general: <span class="tag ${ecls}">${et}</span></p>
-      <div class="g3" style="gap:8px;margin:10px 0">
-        <div style="background:#c6f6d5;border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:600;color:#276749">${sg.dias_sin_novedad||0}</div><div style="font-size:11px;color:#276749">Sin novedad</div></div>
-        <div style="background:#fefcbf;border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:600;color:#744210">${sg.dias_observaciones||0}</div><div style="font-size:11px;color:#744210">Observaciones</div></div>
-        <div style="background:#fed7d7;border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:600;color:#822727">${sg.dias_incidente||0}</div><div style="font-size:11px;color:#822727">Incidentes</div></div>
+    let h=`<p style="margin-bottom:10px">Estado general: <span class="tag ${ecls}">${et}</span></p>
+      <div class="g3" style="gap:8px;margin-bottom:12px">
+        <div style="background:#c6f6d5;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:600;color:#276749">${sg.dias_sin_novedad||0}</div><div style="font-size:11px;color:#276749">Sin novedad</div></div>
+        <div style="background:#fefcbf;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:600;color:#744210">${sg.dias_observaciones||0}</div><div style="font-size:11px;color:#744210">Observaciones</div></div>
+        <div style="background:#fed7d7;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:600;color:#822727">${sg.dias_incidente||0}</div><div style="font-size:11px;color:#822727">Incidentes</div></div>
       </div>`;
-    if((sg.documentos_frecuentes||[]).length)h+=`<p style="margin-bottom:4px"><b style="font-size:12px">Documentos frecuentes:</b></p><div>${sg.documentos_frecuentes.map(x=>`<span class="tag">${strVal(x)}</span>`).join('')}</div>`;
-    if((sg.epp_frecuente||[]).length)h+=`<p style="margin:8px 0 4px"><b style="font-size:12px">EPP utilizado:</b></p><div>${sg.epp_frecuente.map(x=>`<span class="tag">${strVal(x)}</span>`).join('')}</div>`;
-    if((sg.incidentes||[]).length)h+=`<p style="margin:8px 0 4px"><b style="font-size:12px">Incidentes:</b></p><ul>${sg.incidentes.map(x=>`<li>${strVal(x)}</li>`).join('')}</ul>`;
+    if((sg.documentos_frecuentes||[]).length)h+=`<p style="margin-bottom:4px"><b style="font-size:12px">Documentos frecuentes:</b></p><div style="margin-bottom:8px">${sg.documentos_frecuentes.map(x=>`<span class="tag">${strVal(x)}</span>`).join('')}</div>`;
+    if((sg.epp_frecuente||[]).length)h+=`<p style="margin-bottom:4px"><b style="font-size:12px">EPP utilizado:</b></p><div style="margin-bottom:8px">${sg.epp_frecuente.map(x=>`<span class="tag">${strVal(x)}</span>`).join('')}</div>`;
+    if((sg.incidentes||[]).length)h+=`<p style="margin-bottom:4px"><b style="font-size:12px">Incidentes:</b></p><ul>${sg.incidentes.map(x=>`<li>${strVal(x)}</li>`).join('')}</ul>`;
     if((sg.observaciones_relevantes||[]).length)h+=`<p style="margin:8px 0 4px"><b style="font-size:12px">Observaciones relevantes:</b></p><ul>${sg.observaciones_relevantes.map(x=>`<li>${strVal(x)}</li>`).join('')}</ul>`;
     add(s('Variables de Seguridad',h));
   }
 
-  if((d.materiales||[]).length){
-    add(s('Materiales e Insumos',`<ul>${d.materiales.map(m=>`<li>${strVal(m.material)}: <b>${m.cantidad_total}</b> ${m.unidad}</li>`).join('')}</ul>`));
-  }
+  if((d.materiales||[]).length)add(s('Materiales e Insumos',`<ul>${d.materiales.map(m=>`<li>${strVal(m.material)}: <b>${m.cantidad_total}</b> ${m.unidad}</li>`).join('')}</ul>`));
 
   if(d.visitas&&(d.visitas.total>0||(d.visitas.detalle||[]).length)){
     let h=`<p>Total visitas: <b>${d.visitas.total||0}</b></p>`;
@@ -473,22 +403,40 @@ function mostrarResultado(d){
   if((d.semanas||[]).length){
     let h='';
     d.semanas.forEach(sem=>{
-      h+=`<div style="margin-bottom:16px;background:#f7fafc;border-radius:8px;padding:12px">
-        <b style="font-size:12px;color:#2d6a9f">Semana ${sem.numero}${sem.rango?' — '+sem.rango:''}</b>
-        ${sem.resumen_semana?`<p style="margin:6px 0">${sem.resumen_semana}</p>`:''}
-        <div class="g2" style="gap:10px;margin-top:10px">`;
-      (sem.fotos_seleccionadas||[]).forEach((f,fi)=>{
-        h+=`<div style="background:#fff;border:.5px solid #d1d9e0;border-radius:8px;padding:10px">
-          <div style="background:#eef4fb;border-radius:6px;height:80px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px">📷</div>
-          <p style="font-size:12px;font-weight:600;color:#2d3748;margin-bottom:3px">Foto representativa ${fi+1}</p>
-          <p style="font-size:11px;color:#4a5568">${strVal(f.descripcion)}</p>
-          ${f.criterio_seleccion?`<p style="font-size:10px;color:#718096;margin-top:4px;font-style:italic">Criterio: ${f.criterio_seleccion}</p>`:''}
-          ${f.fecha_origen?`<span class="tag" style="font-size:10px">${f.fecha_origen}</span>`:''}
-        </div>`;
-      });
-      h+='</div></div>';
+      const indices=(sem.fotos_indices||[]).filter(i=>i<(d.fotos||[]).length);
+      h+=`<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:.5px solid #e8edf2">
+        <div style="font-size:13px;font-weight:600;color:#1a3a5c;margin-bottom:6px">Semana ${sem.numero}${sem.rango?' — '+sem.rango:''}</div>
+        ${sem.resumen_semana?`<p style="margin-bottom:10px;font-size:13px">${sem.resumen_semana}</p>`:''}`;
+      if(indices.length){
+        h+=`<div class="foto-grid" style="grid-template-columns:repeat(${Math.min(indices.length,3)},1fr)">`;
+        indices.forEach(idx=>{
+          const foto=d.fotos[idx];
+          h+=`<div style="border:.5px solid #d1d9e0;border-radius:8px;overflow:hidden">
+            <img src="${foto.src}" style="width:100%;height:140px;object-fit:cover;display:block"/>
+            ${foto.desc?`<div style="padding:6px 8px;font-size:11px;color:#4a5568;background:#f7fafc">${foto.desc}</div>`:''}
+          </div>`;
+        });
+        h+='</div>';
+      }
+      h+='</div>';
     });
-    add(s('Registro Fotográfico por Semana',h));
+
+    if(d.fotos&&d.fotos.length){
+      const usadas=new Set((d.semanas||[]).flatMap(s=>s.fotos_indices||[]));
+      const noUsadas=d.fotos.map((f,i)=>({f,i})).filter(({i})=>!usadas.has(i));
+      if(noUsadas.length){
+        h+=`<div style="margin-top:8px"><b style="font-size:12px;color:#718096">Otras fotos del período:</b>
+          <div class="foto-grid" style="margin-top:8px">`;
+        noUsadas.forEach(({f})=>{
+          h+=`<div style="border:.5px solid #d1d9e0;border-radius:8px;overflow:hidden">
+            <img src="${f.src}" style="width:100%;height:120px;object-fit:cover;display:block"/>
+            ${f.desc?`<div style="padding:6px 8px;font-size:11px;color:#4a5568;background:#f7fafc">${f.desc}</div>`:''}
+          </div>`;
+        });
+        h+='</div></div>';
+      }
+    }
+    add(s('Registro Fotográfico',h));
   }
 
   if((d.observaciones_generales||[]).length)add(s('Observaciones Generales',`<ul>${d.observaciones_generales.map(o=>`<li>${strVal(o)}</li>`).join('')}</ul>`));
@@ -512,136 +460,280 @@ function volverForm(){
 }
 
 function genCod(){
-  const h=new Date();
-  const aa=String(h.getFullYear()).slice(-2);
-  const mm=String(h.getMonth()+1).padStart(2,'0');
+  const h=new Date(),aa=String(h.getFullYear()).slice(-2),mm=String(h.getMonth()+1).padStart(2,'0');
   const tipo=(document.getElementById('tipo')?.value||'INF').slice(0,3).toUpperCase();
-  if(!window._cntInf)window._cntInf=0;
-  window._cntInf++;
-  return`SUST-${tipo}-${aa}${mm}-${String(window._cntInf).padStart(2,'0')}`;
+  if(!window._cnt)window._cnt=0;window._cnt++;
+  return`SUST-${tipo}-${aa}${mm}-${String(window._cnt).padStart(2,'0')}`;
 }
 
 function cl(s){
   if(!s)return'';
   return String(s)
-    .replace(/á/g,'\xe1').replace(/é/g,'\xe9').replace(/í/g,'\xed')
-    .replace(/ó/g,'\xf3').replace(/ú/g,'\xfa').replace(/ñ/g,'\xf1')
-    .replace(/Á/g,'\xc1').replace(/É/g,'\xc9').replace(/Í/g,'\xcd')
-    .replace(/Ó/g,'\xd3').replace(/Ú/g,'\xda').replace(/Ñ/g,'\xd1')
-    .replace(/ü/g,'\xfc').replace(/Ü/g,'\xdc')
-    .replace(/[^\x00-\xFF]/g,'');
+    .replace(/á/g,'\xe1').replace(/é/g,'\xe9').replace(/í/g,'\xed').replace(/ó/g,'\xf3').replace(/ú/g,'\xfa').replace(/ñ/g,'\xf1')
+    .replace(/Á/g,'\xc1').replace(/É/g,'\xc9').replace(/Í/g,'\xcd').replace(/Ó/g,'\xd3').replace(/Ú/g,'\xda').replace(/Ñ/g,'\xd1')
+    .replace(/ü/g,'\xfc').replace(/Ü/g,'\xdc').replace(/[^\x00-\xFF]/g,'');
 }
 
-function descargarPDF(){
+function imgToJpeg(src,maxW=400,maxH=300){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      const ratio=Math.min(maxW/img.width,maxH/img.height,1);
+      const w=Math.round(img.width*ratio),h=Math.round(img.height*ratio);
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      res({data:cv.toDataURL('image/jpeg',0.82).split(',')[1],w,h,ratio:w/h});
+    };
+    img.src=src;
+  });
+}
+
+async function descargarPDF(){
   if(!datosInforme){tst('No hay informe generado',true);return;}
   const d=datosInforme;
   const{jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4',compress:true});
-  const W=210,M=15,CW=W-M*2;let y=15;
-  const np=()=>{doc.addPage();y=15;};
-  const chk=(n=10)=>{if(y>285-n)np();};
-  const sec=(t)=>{chk(14);doc.setFillColor(238,244,251);doc.rect(M,y-4,CW,9,'F');doc.setTextColor(45,106,159);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text(cl(t).toUpperCase(),M+2,y+1);doc.setTextColor(26,32,44);doc.setFont('helvetica','normal');y+=13;};
-  const para=(t,indent=0)=>{if(!t)return;doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(26,32,44);const ln=doc.splitTextToSize(cl(String(t)),CW-indent);ln.forEach(l=>{chk();doc.text(l,M+indent,y);y+=5;});y+=1;};
-  const row=(l,v)=>{chk();doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text(cl(l)+':',M,y);doc.setFont('helvetica','normal');const ln=doc.splitTextToSize(cl(String(v)),CW-34);doc.text(ln,M+34,y);y+=ln.length*5+2;};
+  const W=210,M=14,CW=W-M*2;let y=15;
 
-  doc.setFillColor(26,58,92);doc.rect(0,0,W,30,'F');
-  doc.setTextColor(255,255,255);doc.setFontSize(13);doc.setFont('helvetica','bold');
-  doc.text('SUSTENTING CHILE SpA',M,10);
-  doc.setFontSize(9);doc.setFont('helvetica','normal');
-  doc.text(cl(d.desc),M,16);
-  doc.text(`Forestacion Barahona - MVC-SGS-CSER-001-2026 - ${d.fi} al ${d.ff}`,M,22);
+  const np=()=>{
+    // footer en pagina actual
+    doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(160,160,160);
+    doc.text(`Elaborado por: ${cl(d.elab)}  ·  ${new Date().toLocaleString('es-CL')}`,M,293);
+    if(d.cod){doc.setFont('helvetica','bold');doc.setTextColor(180,100,40);doc.text(d.cod,W-M,293,{align:'right'});}
+    doc.addPage();y=15;
+  };
+  const chk=(n=12)=>{if(y>285-n)np();};
+
+  const sec=(t,color=[26,58,92])=>{
+    chk(16);
+    doc.setFillColor(...color);doc.roundedRect(M,y-5,CW,10,2,2,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(8.5);doc.setFont('helvetica','bold');
+    doc.text(cl(t).toUpperCase(),M+4,y+1.5);
+    doc.setTextColor(26,32,44);doc.setFont('helvetica','normal');y+=14;
+  };
+
+  const para=(t,indent=0,size=8)=>{
+    if(!t)return;
+    doc.setFontSize(size);doc.setFont('helvetica','normal');doc.setTextColor(26,32,44);
+    const ln=doc.splitTextToSize(cl(String(t)),CW-indent);
+    ln.forEach(l=>{chk(6);doc.text(l,M+indent,y);y+=5;});y+=1;
+  };
+
+  const row=(l,v,lw=38)=>{
+    chk(7);
+    doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(45,106,159);
+    doc.text(cl(l)+':',M,y);
+    doc.setFont('helvetica','normal');doc.setTextColor(26,32,44);
+    const ln=doc.splitTextToSize(cl(String(v)),CW-lw);
+    doc.text(ln,M+lw,y);y+=ln.length*5+1;
+  };
+
+  const badge=(txt,bg,fg)=>{
+    const tw=doc.getTextWidth(cl(txt))+6;
+    doc.setFillColor(...bg);doc.roundedRect(M,y-4,tw,7,2,2,'F');
+    doc.setTextColor(...fg);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+    doc.text(cl(txt),M+3,y+0.5);y+=10;
+  };
+
+  const metricBox=(val,lbl,bg,fg,x,bw)=>{
+    doc.setFillColor(...bg);doc.roundedRect(x,y,bw,16,3,3,'F');
+    doc.setTextColor(...fg);doc.setFontSize(14);doc.setFont('helvetica','bold');
+    doc.text(String(val),x+bw/2,y+10,{align:'center'});
+    doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.text(cl(lbl),x+bw/2,y+15,{align:'center'});
+  };
+
+  // ── PORTADA / HEADER ──
+  doc.setFillColor(26,58,92);doc.rect(0,0,W,36,'F');
+  doc.setFillColor(224,123,57);doc.rect(0,33,W,3,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(15);doc.setFont('helvetica','bold');
+  doc.text('SUSTENTING CHILE SpA',M,12);
+  doc.setFontSize(10);doc.setFont('helvetica','normal');doc.setTextColor(160,196,232);
+  doc.text(cl(d.desc),M,19);
+  doc.setFontSize(8);doc.setTextColor(120,170,210);
+  doc.text(`Forestacion Barahona  ·  MVC-SGS-CSER-001-2026  ·  ${d.fi} al ${d.ff}`,M,25);
+  doc.text(`Elaborado por: ${cl(d.elab)}`,M,30);
   if(d.cod){
-    doc.setFillColor(224,123,57);doc.roundedRect(W-68,4,58,14,3,3,'F');
-    doc.setTextColor(255,255,255);doc.setFontSize(7);doc.text('CODIGO',W-39,9,{align:'center'});
-    doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text(d.cod,W-39,15,{align:'center'});
+    doc.setFillColor(224,123,57);doc.roundedRect(W-62,5,52,18,3,3,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','normal');
+    doc.text('CÓDIGO DE INFORME',W-36,11,{align:'center'});
+    doc.setFontSize(9.5);doc.setFont('helvetica','bold');
+    doc.text(d.cod,W-36,18,{align:'center'});
   }
-  y=38;
+  y=46;
 
+  // ── INDICADORES ──
   if(d.indicadores){
-    sec('Indicadores del Periodo');
-    row('Avance estimado',strVal(d.indicadores.avance_estimado));
-    row('Cumplimiento seguridad',strVal(d.indicadores.cumplimiento_seguridad));
-    row('Eficiencia operacional',strVal(d.indicadores.eficiencia_operacional));
+    sec('Indicadores del Período',[45,106,159]);
+    para(`Avance estimado: ${strVal(d.indicadores.avance_estimado)}`);
+    para(`Cumplimiento seguridad: ${strVal(d.indicadores.cumplimiento_seguridad)}`);
+    para(`Eficiencia operacional: ${strVal(d.indicadores.eficiencia_operacional)}`);
     if(d.indicadores.comentario_indicadores)para(d.indicadores.comentario_indicadores);
-    y+=2;
+    y+=3;
   }
 
-  sec('Resumen Ejecutivo');
+  // ── RESUMEN EJECUTIVO ──
+  sec('Resumen Ejecutivo',[26,58,92]);
   para(d.resumen_ejecutivo);y+=4;
 
+  // ── DOTACIÓN ──
   if(d.dotacion){
-    sec('Dotacion de Personal');
-    row('Total personas',d.dotacion.total_personas||0);
-    row('Dias-hombre acumulados',d.dotacion.dias_trabajados_acumulados||0);
-    row('Ausencias',d.dotacion.ausencias||0);
+    sec('Dotación de Personal',[45,106,159]);
+    const bw=(CW-8)/3;
+    metricBox(d.dotacion.total_personas||0,'Total personas',[238,244,251],[45,106,159],M,bw);
+    metricBox(d.dotacion.dias_trabajados_acumulados||0,'Días-hombre',[230,244,238],[45,158,107],M+bw+4,bw);
+    metricBox(d.dotacion.ausencias||0,'Ausencias',[254,243,235],[224,123,57],M+bw*2+8,bw);
+    y+=22;
     if((d.dotacion.personal||[]).length){
-      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('Personal:',M,y);y+=5;
-      d.dotacion.personal.forEach(p=>{chk();doc.setFont('helvetica','normal');doc.text('- '+cl(strVal(p)),M+2,y);y+=5;});
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(45,106,159);
+      doc.text('Personal:',M,y);y+=5;
+      d.dotacion.personal.forEach(p=>{chk();doc.setFont('helvetica','normal');doc.setTextColor(26,32,44);doc.text('  · '+cl(strVal(p)),M,y);y+=5;});
     }
-    y+=2;
+    y+=3;
   }
 
+  // ── ACTIVIDADES ──
   if((d.actividades||[]).length){
-    sec('Actividades por Categoria');
+    sec('Actividades por Categoría',[45,106,159]);
     d.actividades.forEach(a=>{
-      chk();doc.setFontSize(8);doc.setFont('helvetica','bold');
-      doc.text(cl(strVal(a.categoria))+' ('+(a.total||0)+' registros)',M,y);y+=5;
-      if(a.detalle)para(strVal(a.detalle),2);
-      if((a.actividades||[]).length){doc.setFont('helvetica','normal');doc.text('  '+a.actividades.map(x=>cl(strVal(x))).join(' - '),M,y);y+=5;}
-    });y+=2;
-  }
-
-  if(d.seguridad){
-    const sg=d.seguridad;
-    sec('Variables de Seguridad');
-    row('Estado general',strVal(sg.estado_general));
-    row('Dias sin novedad',sg.dias_sin_novedad||0);
-    row('Dias con observaciones',sg.dias_observaciones||0);
-    row('Dias con incidente',sg.dias_incidente||0);
-    if((sg.documentos_frecuentes||[]).length)row('Documentos frecuentes',sg.documentos_frecuentes.map(strVal).join(', '));
-    if((sg.epp_frecuente||[]).length)row('EPP utilizado',sg.epp_frecuente.map(strVal).join(', '));
-    if((sg.incidentes||[]).length){doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Incidentes:',M,y);y+=5;sg.incidentes.forEach(i=>para('- '+strVal(i),2));}
-    if((sg.observaciones_relevantes||[]).length){doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Observaciones relevantes:',M,y);y+=5;sg.observaciones_relevantes.forEach(i=>para('- '+strVal(i),2));}
-    y+=2;
-  }
-
-  if((d.materiales||[]).length){
-    sec('Materiales e Insumos');
-    d.materiales.forEach(m=>{chk();doc.setFontSize(8);doc.setFont('helvetica','normal');doc.text(`- ${cl(strVal(m.material))}: ${m.cantidad_total} ${m.unidad}`,M+2,y);y+=5;});y+=2;
-  }
-
-  if(d.visitas&&d.visitas.total>0){
-    sec('Visitas DET / MVC');
-    row('Total visitas',d.visitas.total);
-    if((d.visitas.detalle||[]).length)d.visitas.detalle.forEach(v=>para('- '+strVal(v),2));
-    y+=2;
-  }
-
-  if((d.semanas||[]).length){
-    sec('Registro Fotografico por Semana');
-    d.semanas.forEach(sem=>{
-      chk(16);
-      doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(45,106,159);
-      doc.text(cl(`Semana ${sem.numero}${sem.rango?' - '+sem.rango:''}`),M,y);y+=5;
-      doc.setTextColor(26,32,44);
-      if(sem.resumen_semana)para(sem.resumen_semana,2);
-      (sem.fotos_seleccionadas||[]).forEach((f,fi)=>{
-        chk(12);doc.setFont('helvetica','bold');doc.setFontSize(7);
-        doc.text(cl(`Foto ${fi+1}: ${strVal(f.descripcion)}`),M+4,y);y+=4;
-        if(f.criterio_seleccion){doc.setFont('helvetica','italic');doc.text(cl('Criterio: '+f.criterio_seleccion),M+4,y);y+=4;}
-      });y+=3;
+      chk(10);
+      doc.setFontSize(8.5);doc.setFont('helvetica','bold');doc.setTextColor(26,58,92);
+      doc.text(cl(strVal(a.categoria)),M,y);
+      doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(45,106,159);
+      doc.text(`(${a.total||0} registros)`,M+doc.getTextWidth(cl(strVal(a.categoria)))+3,y);
+      doc.setTextColor(26,32,44);y+=5;
+      if(a.detalle)para(strVal(a.detalle),3,7.5);
+      if((a.actividades||[]).length){
+        doc.setFontSize(7.5);doc.setTextColor(80,80,80);
+        doc.text('  '+a.actividades.map(x=>cl(strVal(x))).join('  ·  '),M,y);y+=5;
+      }
+      y+=2;
     });
   }
 
-  if((d.observaciones_generales||[]).length){sec('Observaciones Generales');d.observaciones_generales.forEach(o=>para('- '+strVal(o),2));y+=2;}
-  if((d.comunicaciones_mvc||[]).length){sec('Comunicaciones con MVC');d.comunicaciones_mvc.forEach(o=>para('- '+strVal(o),2));y+=2;}
-  if((d.planificacion_proxima||[]).length){sec('Planificacion Periodo Siguiente');d.planificacion_proxima.forEach(o=>para('- '+strVal(o),2));}
+  // ── SEGURIDAD ──
+  if(d.seguridad){
+    const sg=d.seguridad;
+    sec('Variables de Seguridad',[45,106,159]);
+    const bw2=(CW-8)/3;
+    metricBox(sg.dias_sin_novedad||0,'Sin novedad',[198,246,213],[39,103,73],M,bw2);
+    metricBox(sg.dias_observaciones||0,'Observaciones',[254,252,191],[116,66,16],M+bw2+4,bw2);
+    metricBox(sg.dias_incidente||0,'Incidentes',[254,215,215],[130,39,39],M+bw2*2+8,bw2);
+    y+=22;
+    const et=strVal(sg.estado_general);
+    const ecls=et.toLowerCase().includes('novedad')?[[198,246,213],[39,103,73]]:et.toLowerCase().includes('incidente')?[[254,215,215],[130,39,39]]:[[254,252,191],[116,66,16]];
+    badge(et,...ecls);
+    if((sg.documentos_frecuentes||[]).length)row('Documentos frecuentes',sg.documentos_frecuentes.map(strVal).join(', '));
+    if((sg.epp_frecuente||[]).length)row('EPP utilizado',sg.epp_frecuente.map(strVal).join(', '));
+    if((sg.incidentes||[]).length){chk();doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(130,39,39);doc.text('Incidentes:',M,y);y+=5;sg.incidentes.forEach(i=>para('  · '+strVal(i),3));}
+    if((sg.observaciones_relevantes||[]).length){chk();doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(45,106,159);doc.text('Observaciones relevantes:',M,y);y+=5;sg.observaciones_relevantes.forEach(i=>para('  · '+strVal(i),3));}
+    y+=3;
+  }
 
+  // ── MATERIALES ──
+  if((d.materiales||[]).length){
+    sec('Materiales e Insumos',[45,106,159]);
+    d.materiales.forEach(m=>{chk();doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(26,32,44);doc.text(`  · ${cl(strVal(m.material))}: ${m.cantidad_total} ${m.unidad}`,M,y);y+=5;});y+=3;
+  }
+
+  // ── VISITAS ──
+  if(d.visitas&&d.visitas.total>0){
+    sec('Visitas DET / MVC',[45,106,159]);
+    row('Total visitas',d.visitas.total,28);
+    if((d.visitas.detalle||[]).length)d.visitas.detalle.forEach(v=>para('  · '+strVal(v),3));
+    y+=3;
+  }
+
+  // ── CLIMA ──
+  if(d.clima){
+    sec('Condiciones Climáticas',[45,106,159]);
+    row('Temperatura promedio',strVal(d.clima.temperatura_promedio),46);
+    row('UV frecuente',strVal(d.clima.uv_frecuente),46);
+    if((d.clima.condiciones||[]).length)para(d.clima.condiciones.map(strVal).join('  ·  '),3,7.5);
+    y+=3;
+  }
+
+  // ── FOTOS ──
+  if(d.fotos&&d.fotos.length){
+    sec('Registro Fotográfico',[26,58,92]);
+    const semanas=d.semanas||[];
+    const todasUsadas=new Set(semanas.flatMap(s=>s.fotos_indices||[]));
+
+    for(const sem of semanas){
+      const indices=(sem.fotos_indices||[]).filter(i=>i<d.fotos.length);
+      if(!indices.length)continue;
+      chk(20);
+      doc.setFontSize(8.5);doc.setFont('helvetica','bold');doc.setTextColor(26,58,92);
+      doc.text(cl(`Semana ${sem.numero}${sem.rango?' — '+sem.rango:''}`),M,y);y+=5;
+      if(sem.resumen_semana)para(sem.resumen_semana,3,7.5);
+      y+=2;
+
+      const cols=Math.min(indices.length,2);
+      const fw=(CW-(cols-1)*6)/cols;
+      const fh=fw*0.65;
+
+      for(let ci=0;ci<indices.length;ci+=cols){
+        const rowIdx=indices.slice(ci,ci+cols);
+        chk(fh+14);
+        const imgs=await Promise.all(rowIdx.map(i=>imgToJpeg(d.fotos[i].src,fw*3.78,fh*3.78)));
+        rowIdx.forEach((idx,j)=>{
+          const x=M+j*(fw+6),img=imgs[j],foto=d.fotos[idx];
+          try{doc.addImage(img.data,'JPEG',x,y,fw,fh);}catch(e){}
+          doc.setDrawColor(209,217,224);doc.setLineWidth(0.3);doc.rect(x,y,fw,fh);
+          if(foto.desc){
+            doc.setFillColor(247,250,252);doc.rect(x,y+fh,fw,7,'F');
+            doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.setTextColor(74,85,104);
+            const cap=doc.splitTextToSize(cl(foto.desc),fw-4);
+            doc.text(cap[0],x+2,y+fh+5);
+          }
+        });
+        y+=fh+10;
+      }
+      y+=4;
+    }
+
+    const noUsadas=d.fotos.map((f,i)=>({f,i})).filter(({i})=>!todasUsadas.has(i));
+    if(noUsadas.length){
+      chk(16);
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(113,128,150);
+      doc.text('Otras fotos del período:',M,y);y+=6;
+      const cols=2,fw=(CW-(cols-1)*6)/cols,fh=fw*0.65;
+      for(let ci=0;ci<noUsadas.length;ci+=cols){
+        const row2=noUsadas.slice(ci,ci+cols);
+        chk(fh+14);
+        const imgs=await Promise.all(row2.map(({f})=>imgToJpeg(f.src,fw*3.78,fh*3.78)));
+        row2.forEach(({f},j)=>{
+          const x=M+j*(fw+6),img=imgs[j];
+          try{doc.addImage(img.data,'JPEG',x,y,fw,fh);}catch(e){}
+          doc.setDrawColor(209,217,224);doc.setLineWidth(0.3);doc.rect(x,y,fw,fh);
+          if(f.desc){
+            doc.setFillColor(247,250,252);doc.rect(x,y+fh,fw,7,'F');
+            doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.setTextColor(74,85,104);
+            doc.text(cl(f.desc).substring(0,60),x+2,y+fh+5);
+          }
+        });
+        y+=fh+10;
+      }
+    }
+    y+=3;
+  }
+
+  // ── OBSERVACIONES ──
+  if((d.observaciones_generales||[]).length){sec('Observaciones Generales',[45,106,159]);d.observaciones_generales.forEach(o=>para('  · '+strVal(o),3));y+=3;}
+  if((d.comunicaciones_mvc||[]).length){sec('Comunicaciones con MVC',[45,106,159]);d.comunicaciones_mvc.forEach(o=>para('  · '+strVal(o),3));y+=3;}
+  if((d.planificacion_proxima||[]).length){sec('Planificación Período Siguiente',[45,106,159]);d.planificacion_proxima.forEach(o=>para('  · '+strVal(o),3));}
+
+  // ── FOOTER ÚLTIMA PÁGINA ──
+  doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(160,160,160);
+  doc.text(`Elaborado por: ${cl(d.elab)}  ·  ${new Date().toLocaleString('es-CL')}`,M,293);
+  if(d.cod){doc.setFont('helvetica','bold');doc.setTextColor(180,100,40);doc.text(d.cod,W-M,293,{align:'right'});}
+
+  // ── NUMERACIÓN ──
   const pgs=doc.getNumberOfPages();
   for(let i=1;i<=pgs;i++){
-    doc.setPage(i);doc.setFontSize(7);doc.setTextColor(150);
-    doc.text(`Elaborado por: ${cl(d.elab)} - ${new Date().toLocaleString('es-CL')} - Pag. ${i}/${pgs}`,M,292);
-    if(d.cod){doc.setFont('helvetica','bold');doc.setTextColor(180,100,40);doc.text(d.cod,W-M,292,{align:'right'});}
+    doc.setPage(i);doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(160,160,160);
+    doc.text(`Pág. ${i} / ${pgs}`,W/2,293,{align:'center'});
   }
 
   const blob=doc.output('blob');
