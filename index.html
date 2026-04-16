@@ -259,10 +259,76 @@ async function generar(){
   log('Iniciando análisis con IA...');prog(5,'Preparando archivos...');
 
   const pdfs=[];
+  let totalBytes=0;
   for(let i=0;i<archivos.length;i++){
     log(`Procesando: ${archivos[i].name}`);
     prog(5+((i+1)/archivos.length)*25,`Leyendo PDF ${i+1} de ${archivos.length}...`);
-    pdfs.push({nombre:archivos[i].name,b64:await toB64(archivos[i])});
+    const b64=await toB64(archivos[i]);
+    totalBytes+=archivos[i].size;
+    pdfs.push({nombre:archivos[i].name,b64,size:archivos[i].size});
+  }
+
+  // Si el total supera 8MB, procesar en lotes
+  const MB=1024*1024;
+  const LIMITE=8*MB;
+
+  if(totalBytes>LIMITE){
+    log(`Total ${(totalBytes/MB).toFixed(1)}MB — procesando en lotes...`,'ai');
+    prog(35,'Analizando en lotes...');
+
+    let lotes=[], lote=[], loteSize=0;
+    for(const p of pdfs){
+      if(loteSize+p.size>LIMITE&&lote.length>0){lotes.push(lote);lote=[];loteSize=0;}
+      lote.push(p);loteSize+=p.size;
+    }
+    if(lote.length)lotes.push(lote);
+
+    let respuestaFinal='';
+    for(let li=0;li<lotes.length;li++){
+      log(`Enviando lote ${li+1} de ${lotes.length}...`,'ai');
+      prog(35+((li+1)/lotes.length)*40,`Procesando lote ${li+1} de ${lotes.length}...`);
+      const uc=[];
+      lotes[li].forEach(p=>uc.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:p.b64},title:p.nombre}));
+      uc.push({type:'text',text:li===0
+        ?`Analiza estos reportes diarios del proyecto Forestación Barahona (lote ${li+1}/${lotes.length}). Extrae y resume toda la información: personal, actividades, seguridad, materiales, visitas, clima, observaciones. Responde en texto estructurado en español.`
+        :`Analiza este lote adicional ${li+1}/${lotes.length} de reportes del mismo proyecto. Extrae y resume toda la información del mismo modo.`});
+      const r=await fetch('/api/proxy',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:3000,
+          system:'Eres experto en informes forestales. Extrae y resume toda la información de los reportes.',
+          messages:[{role:'user',content:uc}]})});
+      if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${r.status}`);}
+      const rd=await r.json();
+      respuestaFinal+='\n\n---LOTE '+( li+1)+'---\n'+rd.content.map(b=>b.text||'').join('');
+    }
+
+    // Segunda llamada: consolidar los resúmenes en JSON
+    log('Consolidando análisis...','ai');prog(80,'Generando informe final...');
+    const fotosDesc=fotos.map((f,i)=>`Foto ${i+1}: ${f.desc||'sin descripción'}`).join('\n');
+    const consolidar=await fetch('/api/proxy',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,
+        system:'Eres experto en informes forestales. Responde SOLO con JSON válido. Arrays siempre contienen strings.',
+        messages:[{role:'user',content:[{type:'text',text:`Con base en los siguientes resúmenes de reportes diarios del proyecto Forestación Barahona (${fi} al ${ff}), genera el informe consolidado en JSON.
+
+El usuario también ha cargado ${fotos.length} fotos:
+${fotosDesc}
+
+RESÚMENES:
+${respuestaFinal}
+
+JSON requerido (todos los arrays con STRINGS):
+{"resumen_ejecutivo":"mínimo 5 párrafos","periodo":{"inicio":"${fi}","fin":"${ff}","descripcion":"${desc}","dias_con_reporte":0,"supervisores":["Nombre"]},"dotacion":{"total_personas":0,"dias_trabajados_acumulados":0,"ausencias":0,"personal":["Nombre - Cargo - Asistencia"]},"actividades":[{"categoria":"nombre","actividades":["act1"],"total":0,"detalle":"desc"}],"seguridad":{"estado_general":"texto","dias_sin_novedad":0,"dias_observaciones":0,"dias_incidente":0,"documentos_frecuentes":["doc1"],"epp_frecuente":["epp1"],"incidentes":["inc1"],"observaciones_relevantes":["obs1"]},"materiales":[{"material":"nombre","cantidad_total":0,"unidad":"u"}],"visitas":{"total":0,"detalle":["Nombre - Cargo - Fecha - Motivo"]},"clima":{"condiciones":["cond"],"temperatura_promedio":"XX°C","uv_frecuente":"nivel"},"observaciones_generales":["obs1"],"comunicaciones_mvc":["com1"],"semanas":[{"numero":1,"rango":"DD Mes - DD Mes YYYY","fotos_indices":[0,1],"resumen_semana":"texto"}],"planificacion_proxima":["act1"],"indicadores":{"avance_estimado":"texto","eficiencia_operacional":"texto","cumplimiento_seguridad":"texto","comentario_indicadores":"texto"}}
+
+Responde SOLO con JSON, sin markdown ni backticks.`}]}]})});
+    if(!consolidar.ok){const e=await consolidar.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${consolidar.status}`);}
+    const cd=await consolidar.json();
+    let raw=cd.content.map(b=>b.text||'').join('').trim();
+    raw=raw.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+    const inf=JSON.parse(raw);
+    datosInforme={...inf,desc,fi,ff,elab,tipo:document.getElementById('tipo').value,fotos:[...fotos]};
+    prog(100,'¡Informe generado!');log('Completado ✓','ok');
+    document.getElementById('sn3').className='step-n done';
+    setTimeout(()=>mostrarResultado(datosInforme),600);
+    return;
   }
 
   log('Enviando a IA...','ai');prog(35,'Analizando con Claude...');
