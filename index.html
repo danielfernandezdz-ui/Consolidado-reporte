@@ -164,6 +164,7 @@ input:focus,select:focus,textarea:focus{border-color:#2d6a9f;background:#fff}
 <div class="tst" id="tst"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 let archivos=[], fotos=[], datosInforme=null;
@@ -474,282 +475,176 @@ function cl(s){
     .replace(/ü/g,'\xfc').replace(/Ü/g,'\xdc').replace(/[^\x00-\xFF]/g,'');
 }
 
-function imgToJpeg(src){
-  return new Promise(res=>{
-    const img=new Image();
-    img.onload=()=>{
-      // Usar canvas al tamaño REAL de la imagen sin reducir
-      const cv=document.createElement('canvas');
-      cv.width=img.naturalWidth;cv.height=img.naturalHeight;
-      cv.getContext('2d').drawImage(img,0,0);
-      res({
-        data:cv.toDataURL('image/jpeg',0.97).split(',')[1],
-        w:img.naturalWidth,
-        h:img.naturalHeight,
-        ratio:img.naturalWidth/img.naturalHeight
-      });
-    };
-    img.src=src;
-  });
-}
-
 async function descargarPDF(){
   if(!datosInforme){tst('No hay informe generado',true);return;}
+  tst('Generando PDF de alta calidad...');
   const d=datosInforme;
-  const{jsPDF}=window.jspdf;
-  const doc=new jsPDF({unit:'mm',format:'a4',compress:true});
-  const W=210,M=14,CW=W-M*2;let y=15;
 
-  const np=()=>{
-    // footer en pagina actual
-    doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(160,160,160);
-    doc.text(`Elaborado por: ${cl(d.elab)}  ·  ${new Date().toLocaleString('es-CL')}`,M,293);
-    if(d.cod){doc.setFont('helvetica','bold');doc.setTextColor(180,100,40);doc.text(d.cod,W-M,293,{align:'right'});}
-    doc.addPage();y=15;
-  };
-  const chk=(n=12)=>{if(y>285-n)np();};
+  // Crear contenedor temporal con el informe completo para renderizar
+  const wrap=document.createElement('div');
+  wrap.style.cssText='width:794px;background:#fff;padding:32px;font-family:system-ui,sans-serif;color:#1a202c;position:fixed;left:-9999px;top:0;z-index:-1';
+  document.body.appendChild(wrap);
 
-  const sec=(t,color=[26,58,92])=>{
-    chk(16);
-    doc.setFillColor(...color);doc.roundedRect(M,y-5,CW,10,2,2,'F');
-    doc.setTextColor(255,255,255);doc.setFontSize(8.5);doc.setFont('helvetica','bold');
-    doc.text(cl(t).toUpperCase(),M+4,y+1.5);
-    doc.setTextColor(26,32,44);doc.setFont('helvetica','normal');y+=14;
-  };
+  // Header
+  wrap.innerHTML=`
+  <div style="background:#1a3a5c;border-radius:8px;padding:20px 24px;margin-bottom:20px;position:relative">
+    <div style="font-size:18px;font-weight:700;color:#fff">${d.desc}</div>
+    <div style="font-size:11px;color:#a0c4e8;margin-top:4px">Sustenting Chile SpA · Forestación Barahona · MVC-SGS-CSER-001-2026</div>
+    <div style="font-size:11px;color:#a0c4e8;margin-top:2px">Período: ${d.fi} al ${d.ff} · Elaborado por: ${d.elab}</div>
+    <div style="position:absolute;right:20px;top:50%;transform:translateY(-50%);background:#e07b39;color:#fff;font-size:13px;font-weight:700;padding:8px 16px;border-radius:6px;font-family:monospace">${d.cod||''}</div>
+  </div>`;
 
-  const para=(t,indent=0,size=8,lh=5.2)=>{
-    if(!t)return;
-    doc.setFontSize(size);doc.setFont('helvetica','normal');doc.setTextColor(26,32,44);
-    const ln=doc.splitTextToSize(cl(String(t)),CW-indent-2);
-    ln.forEach(l=>{chk(6);doc.text(l,M+indent,y);y+=lh;});y+=1.5;
-  };
+  const sec=(title,html)=>`
+  <div style="margin-bottom:18px">
+    <div style="background:#2d6a9f;color:#fff;font-size:9px;font-weight:700;letter-spacing:0.8px;padding:7px 12px;border-radius:6px;text-transform:uppercase;margin-bottom:10px">${title}</div>
+    <div style="padding:0 4px;font-size:12px;line-height:1.7;color:#1a202c">${html}</div>
+  </div>`;
 
-  const row=(l,v,lw=38)=>{
-    chk(7);
-    doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(45,106,159);
-    doc.text(cl(l)+':',M,y);
-    doc.setFont('helvetica','normal');doc.setTextColor(26,32,44);
-    const ln=doc.splitTextToSize(cl(String(v)),CW-lw-2);
-    doc.text(ln,M+lw,y);y+=ln.length*5.2+1;
-  };
+  const li=arr=>`<ul style="padding-left:16px;margin:0">${(arr||[]).map(x=>`<li style="margin-bottom:3px">${strVal(x)}</li>`).join('')}</ul>`;
+  const tag=(t,bg='#eef4fb',clr='#2d6a9f')=>`<span style="display:inline-block;background:${bg};color:${clr};border-radius:4px;padding:2px 8px;font-size:11px;margin:2px">${t}</span>`;
+  const metric=(v,l,bg,clr)=>`<div style="background:${bg};border-radius:8px;padding:12px;text-align:center;flex:1"><div style="font-size:22px;font-weight:700;color:${clr}">${v}</div><div style="font-size:10px;color:${clr};margin-top:2px">${l}</div></div>`;
 
-  const badge=(txt,bg,fg)=>{
-    const tw=doc.getTextWidth(cl(txt))+6;
-    doc.setFillColor(...bg);doc.roundedRect(M,y-4,tw,7,2,2,'F');
-    doc.setTextColor(...fg);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
-    doc.text(cl(txt),M+3,y+0.5);y+=10;
-  };
+  let html='';
 
-  const metricBox=(val,lbl,bg,fg,x,bw)=>{
-    doc.setFillColor(...bg);doc.roundedRect(x,y,bw,16,3,3,'F');
-    doc.setTextColor(...fg);doc.setFontSize(14);doc.setFont('helvetica','bold');
-    doc.text(String(val),x+bw/2,y+10,{align:'center'});
-    doc.setFontSize(7);doc.setFont('helvetica','normal');
-    doc.text(cl(lbl),x+bw/2,y+15,{align:'center'});
-  };
+  // Indicadores
+  if(d.indicadores) html+=sec('Indicadores del Período',`
+    <p><b>Avance estimado:</b> ${strVal(d.indicadores.avance_estimado)}</p>
+    <p><b>Cumplimiento seguridad:</b> ${strVal(d.indicadores.cumplimiento_seguridad)}</p>
+    <p><b>Eficiencia operacional:</b> ${strVal(d.indicadores.eficiencia_operacional)}</p>
+    ${d.indicadores.comentario_indicadores?`<p style="margin-top:6px">${d.indicadores.comentario_indicadores}</p>`:''}`);
 
-  // ── PORTADA / HEADER ──
-  doc.setFillColor(26,58,92);doc.rect(0,0,W,36,'F');
-  doc.setFillColor(224,123,57);doc.rect(0,33,W,3,'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(15);doc.setFont('helvetica','bold');
-  doc.text('SUSTENTING CHILE SpA',M,12);
-  doc.setFontSize(10);doc.setFont('helvetica','normal');doc.setTextColor(160,196,232);
-  doc.text(cl(d.desc),M,19);
-  doc.setFontSize(8);doc.setTextColor(120,170,210);
-  doc.text(`Forestacion Barahona  ·  MVC-SGS-CSER-001-2026  ·  ${d.fi} al ${d.ff}`,M,25);
-  doc.text(`Elaborado por: ${cl(d.elab)}`,M,30);
-  if(d.cod){
-    doc.setFillColor(224,123,57);doc.roundedRect(W-62,5,52,18,3,3,'F');
-    doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','normal');
-    doc.text('CÓDIGO DE INFORME',W-36,11,{align:'center'});
-    doc.setFontSize(9.5);doc.setFont('helvetica','bold');
-    doc.text(d.cod,W-36,18,{align:'center'});
-  }
-  y=46;
+  // Resumen ejecutivo
+  html+=sec('Resumen Ejecutivo',`<p style="text-align:justify">${(d.resumen_ejecutivo||'').replace(/\n/g,'</p><p style="text-align:justify;margin-top:6px">')}</p>`);
 
-  // ── INDICADORES ──
-  if(d.indicadores){
-    sec('Indicadores del Período',[45,106,159]);
-    para(`Avance estimado: ${strVal(d.indicadores.avance_estimado)}`);
-    para(`Cumplimiento seguridad: ${strVal(d.indicadores.cumplimiento_seguridad)}`);
-    para(`Eficiencia operacional: ${strVal(d.indicadores.eficiencia_operacional)}`);
-    if(d.indicadores.comentario_indicadores)para(d.indicadores.comentario_indicadores);
-    y+=3;
-  }
+  // Dotación
+  if(d.dotacion) html+=sec('Dotación de Personal',`
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      ${metric(d.dotacion.total_personas||0,'Total personas','#eef4fb','#2d6a9f')}
+      ${metric(d.dotacion.dias_trabajados_acumulados||0,'Días-hombre','#e6f4ee','#2d9e6b')}
+      ${metric(d.dotacion.ausencias||0,'Ausencias','#fef3eb','#e07b39')}
+    </div>
+    ${(d.dotacion.personal||[]).length?li(d.dotacion.personal):''}`);
 
-  // ── RESUMEN EJECUTIVO ──
-  sec('Resumen Ejecutivo',[26,58,92]);
-  para(d.resumen_ejecutivo);y+=4;
+  // Actividades
+  if((d.actividades||[]).length) html+=sec('Actividades por Categoría',
+    d.actividades.map(a=>`
+      <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:0.5px solid #e8edf2">
+        <b style="color:#1a3a5c">${strVal(a.categoria)}</b>
+        <span style="background:#eef4fb;color:#2d6a9f;font-size:10px;padding:1px 7px;border-radius:10px;margin-left:6px">${a.total||0} registros</span>
+        ${a.detalle?`<p style="margin-top:4px;color:#4a5568">${strVal(a.detalle)}</p>`:''}
+        ${(a.actividades||[]).length?`<div style="margin-top:5px">${a.actividades.map(x=>tag(strVal(x))).join('')}</div>`:''}
+      </div>`).join(''));
 
-  // ── DOTACIÓN ──
-  if(d.dotacion){
-    sec('Dotación de Personal',[45,106,159]);
-    const bw=(CW-8)/3;
-    metricBox(d.dotacion.total_personas||0,'Total personas',[238,244,251],[45,106,159],M,bw);
-    metricBox(d.dotacion.dias_trabajados_acumulados||0,'Días-hombre',[230,244,238],[45,158,107],M+bw+4,bw);
-    metricBox(d.dotacion.ausencias||0,'Ausencias',[254,243,235],[224,123,57],M+bw*2+8,bw);
-    y+=22;
-    if((d.dotacion.personal||[]).length){
-      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(45,106,159);
-      doc.text('Personal:',M,y);y+=5;
-      d.dotacion.personal.forEach(p=>{chk();doc.setFont('helvetica','normal');doc.setTextColor(26,32,44);doc.text('  · '+cl(strVal(p)),M,y);y+=5;});
-    }
-    y+=3;
-  }
-
-  // ── ACTIVIDADES ──
-  if((d.actividades||[]).length){
-    sec('Actividades por Categoría',[45,106,159]);
-    d.actividades.forEach(a=>{
-      chk(10);
-      doc.setFontSize(8.5);doc.setFont('helvetica','bold');doc.setTextColor(26,58,92);
-      doc.text(cl(strVal(a.categoria)),M,y);
-      doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(45,106,159);
-      doc.text(`(${a.total||0} registros)`,M+doc.getTextWidth(cl(strVal(a.categoria)))+3,y);
-      doc.setTextColor(26,32,44);y+=5;
-      if(a.detalle)para(strVal(a.detalle),3,7.5);
-      if((a.actividades||[]).length){
-        doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
-        const actTxt=a.actividades.map(x=>cl(strVal(x))).join('  ·  ');
-        const actLn=doc.splitTextToSize(actTxt,CW-5);
-        actLn.forEach(l=>{chk(6);doc.text(l,M+3,y);y+=5;});
-      }
-      y+=2;
-    });
-  }
-
-  // ── SEGURIDAD ──
+  // Seguridad
   if(d.seguridad){
-    const sg=d.seguridad;
-    sec('Variables de Seguridad',[45,106,159]);
-    const bw2=(CW-8)/3;
-    metricBox(sg.dias_sin_novedad||0,'Sin novedad',[198,246,213],[39,103,73],M,bw2);
-    metricBox(sg.dias_observaciones||0,'Observaciones',[254,252,191],[116,66,16],M+bw2+4,bw2);
-    metricBox(sg.dias_incidente||0,'Incidentes',[254,215,215],[130,39,39],M+bw2*2+8,bw2);
-    y+=22;
-    const et=strVal(sg.estado_general);
-    const ecls=et.toLowerCase().includes('novedad')?[[198,246,213],[39,103,73]]:et.toLowerCase().includes('incidente')?[[254,215,215],[130,39,39]]:[[254,252,191],[116,66,16]];
-    badge(et,...ecls);
-    if((sg.documentos_frecuentes||[]).length)row('Documentos frecuentes',sg.documentos_frecuentes.map(strVal).join(', '));
-    if((sg.epp_frecuente||[]).length)row('EPP utilizado',sg.epp_frecuente.map(strVal).join(', '));
-    if((sg.incidentes||[]).length){chk();doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(130,39,39);doc.text('Incidentes:',M,y);y+=5;sg.incidentes.forEach(i=>para('  · '+strVal(i),3));}
-    if((sg.observaciones_relevantes||[]).length){chk();doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(45,106,159);doc.text('Observaciones relevantes:',M,y);y+=5;sg.observaciones_relevantes.forEach(i=>para('  · '+strVal(i),3));}
-    y+=3;
+    const sg=d.seguridad,et=strVal(sg.estado_general);
+    const ecls=et.toLowerCase().includes('novedad')?['#c6f6d5','#276749']:et.toLowerCase().includes('incidente')?['#fed7d7','#822727']:['#fefcbf','#744210'];
+    html+=sec('Variables de Seguridad',`
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        ${metric(sg.dias_sin_novedad||0,'Sin novedad','#c6f6d5','#276749')}
+        ${metric(sg.dias_observaciones||0,'Observaciones','#fefcbf','#744210')}
+        ${metric(sg.dias_incidente||0,'Incidentes','#fed7d7','#822727')}
+      </div>
+      <p style="margin-bottom:8px"><span style="background:${ecls[0]};color:${ecls[1]};padding:3px 10px;border-radius:4px;font-size:11px;font-weight:600">${et}</span></p>
+      ${(sg.documentos_frecuentes||[]).length?`<p style="margin-bottom:4px"><b>Documentos frecuentes:</b></p><div>${sg.documentos_frecuentes.map(x=>tag(strVal(x))).join('')}</div>`:''}
+      ${(sg.epp_frecuente||[]).length?`<p style="margin:8px 0 4px"><b>EPP utilizado:</b></p><div>${sg.epp_frecuente.map(x=>tag(strVal(x))).join('')}</div>`:''}
+      ${(sg.incidentes||[]).length?`<p style="margin:8px 0 4px"><b>Incidentes:</b></p>${li(sg.incidentes)}`:''}
+      ${(sg.observaciones_relevantes||[]).length?`<p style="margin:8px 0 4px"><b>Observaciones relevantes:</b></p>${li(sg.observaciones_relevantes)}`:''}`);
   }
 
-  // ── MATERIALES ──
-  if((d.materiales||[]).length){
-    sec('Materiales e Insumos',[45,106,159]);
-    d.materiales.forEach(m=>{chk();doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(26,32,44);doc.text(`  · ${cl(strVal(m.material))}: ${m.cantidad_total} ${m.unidad}`,M,y);y+=5;});y+=3;
-  }
+  if((d.materiales||[]).length) html+=sec('Materiales e Insumos',li(d.materiales.map(m=>`${strVal(m.material)}: <b>${m.cantidad_total}</b> ${m.unidad}`)));
+  if(d.visitas&&d.visitas.total>0) html+=sec('Visitas DET / MVC',`<p>Total visitas: <b>${d.visitas.total}</b></p>${(d.visitas.detalle||[]).length?li(d.visitas.detalle):''}`);
+  if(d.clima) html+=sec('Condiciones Climáticas',`<p>Temperatura promedio: <b>${strVal(d.clima.temperatura_promedio)}</b> · UV frecuente: <b>${strVal(d.clima.uv_frecuente)}</b></p><div style="margin-top:6px">${(d.clima.condiciones||[]).map(c=>tag(strVal(c))).join('')}</div>`);
 
-  // ── VISITAS ──
-  if(d.visitas&&d.visitas.total>0){
-    sec('Visitas DET / MVC',[45,106,159]);
-    row('Total visitas',d.visitas.total,28);
-    if((d.visitas.detalle||[]).length)d.visitas.detalle.forEach(v=>para('  · '+strVal(v),3));
-    y+=3;
-  }
-
-  // ── CLIMA ──
-  if(d.clima){
-    sec('Condiciones Climáticas',[45,106,159]);
-    row('Temperatura promedio',strVal(d.clima.temperatura_promedio),46);
-    row('UV frecuente',strVal(d.clima.uv_frecuente),46);
-    if((d.clima.condiciones||[]).length)para(d.clima.condiciones.map(strVal).join('  ·  '),3,7.5);
-    y+=3;
-  }
-
-  // ── FOTOS ──
+  // Fotos
   if(d.fotos&&d.fotos.length){
-    sec('Registro Fotográfico',[26,58,92]);
+    let fhtml='';
     const semanas=d.semanas||[];
-    const todasUsadas=new Set(semanas.flatMap(s=>s.fotos_indices||[]));
-
-    for(const sem of semanas){
-      const indices=(sem.fotos_indices||[]).filter(i=>i<d.fotos.length);
-      if(!indices.length)continue;
-      chk(20);
-      doc.setFontSize(8.5);doc.setFont('helvetica','bold');doc.setTextColor(26,58,92);
-      doc.text(cl(`Semana ${sem.numero}${sem.rango?' — '+sem.rango:''}`),M,y);y+=5;
-      if(sem.resumen_semana)para(sem.resumen_semana,3,7.5);
-      y+=2;
-
-      const cols=Math.min(indices.length,2);
-      const fw=(CW-(cols-1)*6)/cols;
-      const fh=fw*0.65;
-
-      for(let ci=0;ci<indices.length;ci+=cols){
-        const rowIdx=indices.slice(ci,ci+cols);
-        chk(fh+14);
-        const imgs=await Promise.all(rowIdx.map(i=>imgToJpeg(d.fotos[i].src,fw*3.78,fh*3.78)));
-        rowIdx.forEach((idx,j)=>{
-          const x=M+j*(fw+6),img=imgs[j],foto=d.fotos[idx];
-          try{doc.addImage(img.data,'JPEG',x,y,fw,fh);}catch(e){}
-          doc.setDrawColor(209,217,224);doc.setLineWidth(0.3);doc.rect(x,y,fw,fh);
-          if(foto.desc){
-            doc.setFillColor(247,250,252);doc.rect(x,y+fh,fw,7,'F');
-            doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.setTextColor(74,85,104);
-            const cap=doc.splitTextToSize(cl(foto.desc),fw-4);
-            doc.text(cap[0],x+2,y+fh+5);
-          }
-        });
-        y+=fh+10;
-      }
-      y+=4;
+    const usadas=new Set(semanas.flatMap(s=>s.fotos_indices||[]));
+    semanas.forEach(sem=>{
+      const idx=(sem.fotos_indices||[]).filter(i=>i<d.fotos.length);
+      if(!idx.length)return;
+      fhtml+=`<div style="margin-bottom:16px">
+        <b style="color:#1a3a5c;font-size:12px">Semana ${sem.numero}${sem.rango?' — '+sem.rango:''}</b>
+        ${sem.resumen_semana?`<p style="margin:4px 0 8px;color:#4a5568">${sem.resumen_semana}</p>`:'<div style="margin-bottom:8px"></div>'}
+        <div style="display:grid;grid-template-columns:repeat(${Math.min(idx.length,2)},1fr);gap:10px">`;
+      idx.forEach(i=>{
+        const f=d.fotos[i];
+        fhtml+=`<div style="border-radius:8px;overflow:hidden;border:0.5px solid #d1d9e0">
+          <img src="${f.src}" style="width:100%;height:200px;object-fit:cover;display:block"/>
+          ${f.desc?`<div style="padding:6px 10px;font-size:11px;color:#4a5568;background:#f7fafc">${f.desc}</div>`:''}
+        </div>`;
+      });
+      fhtml+='</div></div>';
+    });
+    const noUs=d.fotos.map((f,i)=>({f,i})).filter(({i})=>!usadas.has(i));
+    if(noUs.length){
+      fhtml+=`<div style="margin-top:10px"><b style="font-size:11px;color:#718096">Otras fotos del período:</b>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:8px">`;
+      noUs.forEach(({f})=>{
+        fhtml+=`<div style="border-radius:8px;overflow:hidden;border:0.5px solid #d1d9e0">
+          <img src="${f.src}" style="width:100%;height:180px;object-fit:cover;display:block"/>
+          ${f.desc?`<div style="padding:6px 10px;font-size:11px;color:#4a5568;background:#f7fafc">${f.desc}</div>`:''}
+        </div>`;
+      });
+      fhtml+='</div></div>';
     }
-
-    const noUsadas=d.fotos.map((f,i)=>({f,i})).filter(({i})=>!todasUsadas.has(i));
-    if(noUsadas.length){
-      chk(16);
-      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(113,128,150);
-      doc.text('Otras fotos del período:',M,y);y+=6;
-      const cols=2,fw=(CW-(cols-1)*6)/cols,fh=fw*0.65;
-      for(let ci=0;ci<noUsadas.length;ci+=cols){
-        const row2=noUsadas.slice(ci,ci+cols);
-        chk(fh+14);
-        const imgs=await Promise.all(row2.map(({f})=>imgToJpeg(f.src,fw*3.78,fh*3.78)));
-        row2.forEach(({f},j)=>{
-          const x=M+j*(fw+6),img=imgs[j];
-          try{doc.addImage(img.data,'JPEG',x,y,fw,fh);}catch(e){}
-          doc.setDrawColor(209,217,224);doc.setLineWidth(0.3);doc.rect(x,y,fw,fh);
-          if(f.desc){
-            doc.setFillColor(247,250,252);doc.rect(x,y+fh,fw,7,'F');
-            doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.setTextColor(74,85,104);
-            doc.text(cl(f.desc).substring(0,60),x+2,y+fh+5);
-          }
-        });
-        y+=fh+10;
-      }
-    }
-    y+=3;
+    html+=sec('Registro Fotográfico',fhtml);
   }
 
-  // ── OBSERVACIONES ──
-  if((d.observaciones_generales||[]).length){sec('Observaciones Generales',[45,106,159]);d.observaciones_generales.forEach(o=>para('  · '+strVal(o),3));y+=3;}
-  if((d.comunicaciones_mvc||[]).length){sec('Comunicaciones con MVC',[45,106,159]);d.comunicaciones_mvc.forEach(o=>para('  · '+strVal(o),3));y+=3;}
-  if((d.planificacion_proxima||[]).length){sec('Planificación Período Siguiente',[45,106,159]);d.planificacion_proxima.forEach(o=>para('  · '+strVal(o),3));}
+  if((d.observaciones_generales||[]).length) html+=sec('Observaciones Generales',li(d.observaciones_generales));
+  if((d.comunicaciones_mvc||[]).length) html+=sec('Comunicaciones con MVC',li(d.comunicaciones_mvc));
+  if((d.planificacion_proxima||[]).length) html+=sec('Planificación Período Siguiente',li(d.planificacion_proxima));
 
-  // ── FOOTER ÚLTIMA PÁGINA ──
-  doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(160,160,160);
-  doc.text(`Elaborado por: ${cl(d.elab)}  ·  ${new Date().toLocaleString('es-CL')}`,M,293);
-  if(d.cod){doc.setFont('helvetica','bold');doc.setTextColor(180,100,40);doc.text(d.cod,W-M,293,{align:'right'});}
+  // Footer
+  html+=`<div style="margin-top:24px;padding-top:10px;border-top:0.5px solid #e8edf2;display:flex;justify-content:space-between;font-size:9px;color:#a0aec0">
+    <span>Elaborado por: ${d.elab} · ${new Date().toLocaleString('es-CL')}</span>
+    <span style="color:#e07b39;font-weight:700;font-family:monospace">${d.cod||''}</span>
+  </div>`;
 
-  // ── NUMERACIÓN ──
-  const pgs=doc.getNumberOfPages();
-  for(let i=1;i<=pgs;i++){
-    doc.setPage(i);doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(160,160,160);
-    doc.text(`Pág. ${i} / ${pgs}`,W/2,293,{align:'center'});
+  wrap.innerHTML+=html;
+
+  try{
+    const{jsPDF}=window.jspdf;
+    const pdf=new jsPDF({unit:'mm',format:'a4',compress:false});
+    const PW=794,PH=1123;
+
+    const canvas=await html2canvas(wrap,{
+      scale:2,
+      useCORS:true,
+      allowTaint:true,
+      backgroundColor:'#ffffff',
+      width:PW,
+      windowWidth:PW
+    });
+
+    const imgData=canvas.toDataURL('image/jpeg',1.0);
+    const pdfW=210,pdfH=(canvas.height*pdfW)/canvas.width;
+    const pages=Math.ceil(pdfH/297);
+
+    for(let i=0;i<pages;i++){
+      if(i>0)pdf.addPage();
+      const srcY=(i*297*canvas.width)/pdfW;
+      const srcH=Math.min(297*canvas.width/pdfW, canvas.height-srcY);
+      const pg=document.createElement('canvas');
+      pg.width=canvas.width;pg.height=srcH;
+      pg.getContext('2d').drawImage(canvas,0,srcY,canvas.width,srcH,0,0,canvas.width,srcH);
+      const pgData=pg.toDataURL('image/jpeg',1.0);
+      pdf.addImage(pgData,'JPEG',0,0,pdfW,(srcH*pdfW)/canvas.width);
+    }
+
+    document.body.removeChild(wrap);
+    const blob=pdf.output('blob');
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=`${d.cod||'informe'}_${d.fi}_${d.ff}.pdf`;
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},300);
+    tst('PDF descargado correctamente');
+  }catch(err){
+    document.body.removeChild(wrap);
+    tst('Error al generar PDF: '+err.message,true);
   }
-
-  const blob=doc.output('blob');
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download=`${d.cod||'informe'}_${d.fi}_${d.ff}.pdf`;
-  document.body.appendChild(a);a.click();
-  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},300);
-  tst('PDF descargado correctamente');
 }
 
 updTipo();
