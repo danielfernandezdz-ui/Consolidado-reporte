@@ -541,6 +541,19 @@ function cl(s){
     .replace(/ü/g,'\xfc').replace(/Ü/g,'\xdc').replace(/[^\x00-\xFF]/g,'');
 }
 
+async function renderBloque(html,PW){
+  const div=document.createElement('div');
+  div.style.cssText=`width:${PW}px;background:#fff;padding:0 32px;font-family:system-ui,sans-serif;color:#1a202c;position:fixed;left:-9999px;top:0;z-index:-1`;
+  div.innerHTML=html;
+  document.body.appendChild(div);
+  await Promise.all([...div.querySelectorAll('img')].map(img=>
+    img.complete?Promise.resolve():new Promise(r=>{img.onload=r;img.onerror=r;})
+  ));
+  const cv=await html2canvas(div,{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',width:PW,windowWidth:PW});
+  document.body.removeChild(div);
+  return cv;
+}
+
 async function descargarPDF(){
   if(!datosInforme){tst('No hay informe generado',true);return;}
   tst('Generando PDF de alta calidad...');
