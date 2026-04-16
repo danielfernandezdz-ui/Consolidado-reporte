@@ -270,7 +270,7 @@ async function generar(){
 
   // Si el total supera 8MB, procesar en lotes
   const MB=1024*1024;
-  const LIMITE=8*MB;
+  const LIMITE=3*MB;
 
   if(totalBytes>LIMITE){
     log(`Total ${(totalBytes/MB).toFixed(1)}MB — procesando en lotes...`,'ai');
