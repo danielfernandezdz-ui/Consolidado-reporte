@@ -607,7 +607,7 @@ async function descargarPDF(){
   try{
     const{jsPDF}=window.jspdf;
     const pdf=new jsPDF({unit:'mm',format:'a4',compress:false});
-    const PW=794,PH=1123;
+    const PW=794;
 
     const canvas=await html2canvas(wrap,{
       scale:2,
